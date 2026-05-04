@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Backups locaux (ne pas publier sur GitHub Pages)
+Assistant-DD-2024.html
+*.bak
+*.backup
+
+# Bundles temporaires
+thork-pwa.zip
+*.zip
+
+# Fichiers temporaires sans extension (artefacts système)
+zic*
+840
+
+# Documentation locale (pas besoin sur GitHub)
+DEPLOIEMENT.md
+MISE-EN-LIGNE.md
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editeurs
+.vscode/
+.idea/
+*.swp
+*.swo

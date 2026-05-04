@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Assistant D&D 5e — Thork</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a1208">
+<meta name="description" content="Assistant de personnage Donjons & Dragons 5e (2024)">
+<meta name="application-name" content="Thork D&D">
+<!-- iOS Safari standalone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Thork D&D">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;900&family=IM+Fell+English:ital@0;1&family=MedievalSharp&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    /* === BACKDROP === */
+    --bg-deep:        #08060a;
+    --bg-base:        #15110d;
+    --bg-card-dark:   #1f1810;
+    --bg-card-darker: #120c08;
+    /* === PARCHMENT === */
+    --parchment:        #f1e4c1;
+    --parchment-warm:   #ead7a3;
+    --parchment-edge:   #c9b27c;
+    --parchment-shadow: #8b7440;
+    /* === GOLD === */
+    --gold-light:   #f0d480;
+    --gold:         #d4a857;
+    --gold-mid:     #b88a3a;
+    --gold-deep:    #8a6420;
+    --gold-shadow:  #4a3210;
+    /* === INK === */
+    --ink:        #1c130a;
+    --ink-soft:   #4a3520;
+    --ink-faint:  #6e5a3a;
+    /* === WAX RED === */
+    --wax:        #8e1818;
+    --wax-bright: #b62828;
+    --wax-deep:   #5e0e0e;
+    --wax-glow:   rgba(182, 40, 40, 0.5);
+    /* === LEAF GREEN === */
+    --leaf:        #4a7a3a;
+    --leaf-bright: #6c9c50;
+    --leaf-deep:   #2c4a20;
+    /* === STEEL === */
+    --steel:        #2a3340;
+    --steel-bright: #44546a;
+    --steel-deep:   #161b22;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'IM Fell English', 'Georgia', serif;
+    color: #e8dcc0;
+    margin: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,168,87,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 100% 100%, rgba(142,24,24,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 0% 0%, rgba(74,122,58,0.04) 0%, transparent 60%),
+      linear-gradient(160deg, #0a0805 0%, #15110d 50%, #0e0a06 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  /* Subtle ambient noise + filigree texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.08;
+    background-image:
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'%3E%3Cdefs%3E%3Cpattern id='p' x='0' y='0' width='140' height='140' patternUnits='userSpaceOnUse'%3E%3Cpath d='M70 10 C90 30, 90 50, 70 70 C50 50, 50 30, 70 10 Z M70 70 C90 90, 90 110, 70 130 C50 110, 50 90, 70 70 Z' fill='none' stroke='%23d4a857' stroke-width='0.6'/%3E%3Ccircle cx='70' cy='70' r='2' fill='%23d4a857'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23p)'/%3E%3C/svg%3E");
+  }
+
+  #root { position: relative; z-index: 1; }
+
+  /* === FONTS === */
+  h1, h2, h3, h4, .cinzel { font-family: 'Cinzel', serif; letter-spacing: 0.04em; }
+  .imfell { font-family: 'IM Fell English', serif; }
+  .smallcaps { text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.78em; }
+
+  /* === COLOR UTILITIES (kept compatible with existing JSX) === */
+  .ink   { color: var(--ink); }
+  .ink\/80 { color: var(--ink-soft); }
+  .gold  { color: var(--gold-light); }
+  .blood { color: var(--wax-bright); }
+
+  /* === PARCHMENT PANEL === */
+  .parchment {
+    position: relative;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 22% 18%, #fbf2d6 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 88%, #e9d5a2 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 50%, #f1e4c1 0%, #ddc78a 100%);
+    border: 1px solid var(--gold-deep);
+    border-radius: 10px;
+    box-shadow:
+      inset 0 0 30px rgba(139,111,58,0.20),
+      inset 0 0 0 1px rgba(255,245,210,0.45),
+      inset 0 0 0 3px rgba(212,168,87,0.10),
+      0 10px 26px rgba(0,0,0,0.55),
+      0 2px 0 rgba(212,168,87,0.18);
+  }
+  /* Decorative double border via pseudo */
+  .parchment::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(138, 100, 32, 0.45);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .parchment::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    pointer-events: none;
+    background:
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cpath d='M2 14 C2 6, 6 2, 14 2 M50 14 C50 6, 46 2, 38 2 M2 38 C2 46, 6 50, 14 50 M50 38 C50 46, 46 50, 38 50' fill='none' stroke='%238a6420' stroke-width='1.2' opacity='0.65'/%3E%3Cpath d='M14 2 L18 2 M2 14 L2 18 M38 2 L34 2 M50 14 L50 18 M14 50 L18 50 M2 38 L2 34 M38 50 L34 50 M50 38 L50 34' stroke='%238a6420' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='8' cy='44' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='44' r='1.5' fill='%23d4a857'/%3E%3C/svg%3E") top left no-repeat,
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cpath d='M2 14 C2 6, 6 2, 14 2 M50 14 C50 6, 46 2, 38 2 M2 38 C2 46, 6 50, 14 50 M50 38 C50 46, 46 50, 38 50' fill='none' stroke='%238a6420' stroke-width='1.2' opacity='0.65'/%3E%3Cpath d='M14 2 L18 2 M2 14 L2 18 M38 2 L34 2 M50 14 L50 18 M14 50 L18 50 M2 38 L2 34 M38 50 L34 50 M50 38 L50 34' stroke='%238a6420' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='8' cy='44' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='44' r='1.5' fill='%23d4a857'/%3E%3C/svg%3E") top right no-repeat,
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cpath d='M2 14 C2 6, 6 2, 14 2 M50 14 C50 6, 46 2, 38 2 M2 38 C2 46, 6 50, 14 50 M50 38 C50 46, 46 50, 38 50' fill='none' stroke='%238a6420' stroke-width='1.2' opacity='0.65'/%3E%3Cpath d='M14 2 L18 2 M2 14 L2 18 M38 2 L34 2 M50 14 L50 18 M14 50 L18 50 M2 38 L2 34 M38 50 L34 50 M50 38 L50 34' stroke='%238a6420' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='8' cy='44' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='44' r='1.5' fill='%23d4a857'/%3E%3C/svg%3E") bottom left no-repeat,
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='52' viewBox='0 0 52 52'%3E%3Cpath d='M2 14 C2 6, 6 2, 14 2 M50 14 C50 6, 46 2, 38 2 M2 38 C2 46, 6 50, 14 50 M50 38 C50 46, 46 50, 38 50' fill='none' stroke='%238a6420' stroke-width='1.2' opacity='0.65'/%3E%3Cpath d='M14 2 L18 2 M2 14 L2 18 M38 2 L34 2 M50 14 L50 18 M14 50 L18 50 M2 38 L2 34 M38 50 L34 50 M50 38 L50 34' stroke='%238a6420' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='8' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='8' cy='44' r='1.5' fill='%23d4a857'/%3E%3Ccircle cx='44' cy='44' r='1.5' fill='%23d4a857'/%3E%3C/svg%3E") bottom right no-repeat;
+    background-size: 52px 52px;
+  }
+  .parchment > * { position: relative; z-index: 1; }
+
+  /* Section title with side flourishes */
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-align: center;
+    padding: 6px 0 10px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .section-title::before, .section-title::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 26%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-mid) 20%, var(--gold-mid) 80%, transparent);
+  }
+  .section-title::before { left: 4%; }
+  .section-title::after  { right: 4%; }
+
+  /* === STAT SHIELD (small box) === */
+  .stat-box {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 28%, #fbf2d6 0%, #ead7a3 60%, #d6bf80 100%);
+    border: 1px solid var(--gold-deep);
+    border-radius: 8px;
+    color: var(--ink);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,245,210,0.55),
+      inset 0 0 12px rgba(184,138,58,0.25),
+      0 2px 6px rgba(0,0,0,0.4);
+  }
+  .stat-box::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(138,100,32,0.35);
+    border-radius: 5px;
+    pointer-events: none;
+  }
+  .stat-box > * { position: relative; z-index: 1; }
+
+  /* === BUTTONS === */
+  .dnd-btn {
+    --btn-grad-from: #2a2a30;
+    --btn-grad-to:   #14141a;
+    --btn-color:     var(--gold-light);
+    --btn-border:    var(--gold-deep);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--btn-color);
+    background:
+      linear-gradient(180deg, var(--btn-grad-from) 0%, var(--btn-grad-to) 100%);
+    border: 1px solid var(--btn-border);
+    border-radius: 5px;
+    cursor: pointer;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+    transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.15s;
+    box-shadow:
+      inset 0 1px 0 rgba(240,212,128,0.30),
+      inset 0 -2px 4px rgba(0,0,0,0.45),
+      0 2px 4px rgba(0,0,0,0.50);
+  }
+  .dnd-btn:hover { filter: brightness(1.18); box-shadow: inset 0 1px 0 rgba(240,212,128,0.40), inset 0 -2px 4px rgba(0,0,0,0.45), 0 0 12px rgba(212,168,87,0.30), 0 2px 4px rgba(0,0,0,0.50); }
+  .dnd-btn:active { transform: translateY(1px); }
+  .dnd-btn:disabled { filter: grayscale(0.5) brightness(0.6); cursor: not-allowed; }
+
+  /* Variant: red wax (primary action) */
+  .dnd-btn-danger,
+  .dnd-btn.dnd-btn-danger {
+    --btn-grad-from: #b62828;
+    --btn-grad-to:   #5e0e0e;
+    --btn-color: #f5e9c8;
+    --btn-border: var(--gold-deep);
+  }
+  .dnd-btn-danger:hover { box-shadow: inset 0 1px 0 rgba(255,200,180,0.45), inset 0 -2px 4px rgba(0,0,0,0.45), 0 0 14px var(--wax-glow), 0 2px 4px rgba(0,0,0,0.50); }
+
+  /* Variant: gold (positive secondary) */
+  .dnd-btn-gold {
+    --btn-grad-from: #e0b865;
+    --btn-grad-to:   #8a6420;
+    --btn-color: var(--ink);
+    --btn-border: #5a4015;
+  }
+
+  /* Variant: leaf (positive) */
+  .dnd-btn-leaf {
+    --btn-grad-from: #6c9c50;
+    --btn-grad-to:   #2c4a20;
+    --btn-color: #f5e9c8;
+  }
+
+  /* === TABS — ribbon style === */
+  .tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+    margin-top: 4px;
+    background:
+      linear-gradient(180deg, rgba(31,24,16,0.85) 0%, rgba(15,12,8,0.85) 100%);
+    border: 1px solid var(--gold-deep);
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 0 rgba(212,168,87,0.15),
+      inset 0 -1px 2px rgba(0,0,0,0.5),
+      0 4px 10px rgba(0,0,0,0.45);
+  }
+  .tab-btn {
+    position: relative;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 7px 13px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover {
+    color: var(--gold-light);
+    background: rgba(212,168,87,0.08);
+  }
+  .tab-btn.active {
+    color: var(--gold-light);
+    background: linear-gradient(180deg, rgba(212,168,87,0.18) 0%, rgba(212,168,87,0.05) 100%);
+    border-color: rgba(212,168,87,0.4);
+    box-shadow: inset 0 1px 0 rgba(240,212,128,0.25);
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: -2px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+    box-shadow: 0 0 8px rgba(240,212,128,0.6);
+  }
+
+  /* === INPUTS === */
+  .input-dnd {
+    background:
+      linear-gradient(180deg, rgba(255,248,220,0.78) 0%, rgba(240,228,193,0.85) 100%);
+    border: 1px solid var(--gold-deep);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 5px 9px;
+    font-family: 'IM Fell English', serif;
+    box-shadow:
+      inset 0 1px 2px rgba(0,0,0,0.18),
+      inset 0 0 0 1px rgba(255,255,255,0.30);
+  }
+  .input-dnd:focus {
+    outline: none;
+    border-color: var(--gold-light);
+    box-shadow:
+      inset 0 1px 2px rgba(0,0,0,0.18),
+      0 0 0 2px rgba(240,212,128,0.40);
+  }
+  textarea.input-dnd { resize: vertical; min-height: 38px; }
+  select.input-dnd {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 28px;
+    background-image:
+      linear-gradient(180deg, rgba(255,248,220,0.78) 0%, rgba(240,228,193,0.85) 100%),
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 5 L7 10 L11 5' fill='none' stroke='%238a6420' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 0 top 0, right 8px center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%, 14px 14px;
+  }
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--gold-deep);
+    border-radius: 3px;
+    background: linear-gradient(180deg, #fbf2d6 0%, #d6bf80 100%);
+    cursor: pointer;
+    position: relative;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.15);
+  }
+  input[type="checkbox"]:checked {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+    border-color: var(--gold-shadow);
+  }
+  input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px; top: 1px;
+    width: 4px; height: 9px;
+    border: solid var(--ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(40deg);
+  }
+  input[type="checkbox"]:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* === SCROLLBAR === */
+  .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-thin::-webkit-scrollbar-track { background: rgba(0,0,0,0.25); border-radius: 4px; }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+    border-radius: 4px;
+    border: 1px solid var(--gold-shadow);
+  }
+
+  /* === PIPS (slots, charges) === */
+  .slot-pip {
+    width: 20px; height: 20px;
+    border: 2px solid var(--gold-deep);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, #fff8de 0%, #ead7a3 50%, #b88a3a 100%);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: inset 0 0 4px rgba(138,100,32,0.4), 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .slot-pip:hover { transform: scale(1.15); box-shadow: 0 0 8px rgba(240,212,128,0.5); }
+  .slot-pip.used {
+    background:
+      radial-gradient(circle at 30% 30%, #5a0808 0%, #2a0404 80%);
+    border-color: #4a0808;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.7);
+  }
+  .death-pip {
+    width: 18px; height: 18px;
+    border: 2px solid var(--gold-deep);
+    border-radius: 50%;
+    cursor: pointer;
+    background: radial-gradient(circle at 30% 30%, #fbf2d6 0%, #d6bf80 100%);
+    transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .death-pip.success {
+    background: radial-gradient(circle at 30% 30%, #6cb44a 0%, #2c4a20 100%);
+    border-color: #2a4015;
+  }
+  .death-pip.failure {
+    background: radial-gradient(circle at 30% 30%, #c43030 0%, #5e0e0e 100%);
+    border-color: #4a0808;
+  }
+
+  /* === INSPIRATION (wax-seal-like) === */
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(212,168,87,0.4), inset 0 0 8px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 18px rgba(240,212,128,0.85), 0 0 30px rgba(212,168,87,0.4), inset 0 0 8px rgba(0,0,0,0.4); }
+  }
+  .glowing { animation: glow 2.4s infinite ease-in-out; }
+
+  /* === PROGRESS BAR === */
+  .progress-track {
+    position: relative;
+    height: 18px;
+    background:
+      linear-gradient(180deg, #1a120a 0%, #0a0604 100%);
+    border: 1px solid var(--gold-deep);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(212,168,87,0.18),
+      0 1px 2px rgba(0,0,0,0.4);
+  }
+  .progress-fill-hp {
+    height: 100%;
+    background:
+      linear-gradient(180deg, #d83838 0%, #8e1818 50%, #5e0e0e 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,200,200,0.30),
+      inset 0 -2px 4px rgba(0,0,0,0.40);
+    transition: width 0.5s ease;
+  }
+  .progress-fill-hp.low { background: linear-gradient(180deg, #d8a838 0%, #8a6418 50%, #5a4010 100%); }
+  .progress-fill-hp.crit { background: linear-gradient(180deg, #ff4040 0%, #b01818 50%, #6e0c0c 100%); animation: pulse-crit 1.4s infinite; }
+  @keyframes pulse-crit { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.4); } }
+
+  /* === DETAILS / SUMMARY === */
+  details > summary { cursor: pointer; list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  /* === DIVIDER === */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-mid) 50%, transparent);
+    margin: 12px 0;
+    position: relative;
+  }
+  .divider::after {
+    content: '✦';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--gold-mid);
+    background: var(--parchment-warm);
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  /* === CARD HOVER === */
+  .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,87,0.3); }
+
+  /* === BADGES === */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 8px;
+    background: linear-gradient(180deg, #b62828 0%, #5e0e0e 100%);
+    color: var(--gold-light);
+    border: 1px solid var(--gold-deep);
+    border-radius: 13px;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+    box-shadow: inset 0 1px 0 rgba(240,212,128,0.3), 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .badge-gold { background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%); color: var(--ink); }
+  .badge-steel { background: linear-gradient(180deg, var(--steel-bright) 0%, var(--steel-deep) 100%); }
+
+  /* === Wax seal === */
+  .wax-seal {
+    width: 56px; height: 56px;
+    background:
+      radial-gradient(circle at 35% 30%, #d83838 0%, #8e1818 55%, #5e0e0e 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-light);
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 20px;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.7);
+    border: 1px solid #4a0808;
+    box-shadow:
+      inset -4px -4px 8px rgba(0,0,0,0.45),
+      inset 4px 4px 6px rgba(255,180,160,0.20),
+      0 4px 10px rgba(0,0,0,0.55);
+  }
+
+  /* === D20 === */
+  .d20 {
+    width: 64px; height: 64px;
+    background:
+      radial-gradient(circle at 30% 30%, var(--gold-light) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 22px;
+    text-shadow: 1px 1px 0 rgba(255,240,180,0.4);
+    margin: 0 auto;
+  }
+
+  /* === SHIMMER (subtle gold flourish on hover) === */
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -100%;
+    width: 50%; height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(240,212,128,0.18), transparent);
+    transition: left 0.8s ease;
+    pointer-events: none;
+  }
+  .shimmer:hover::before { left: 200%; }
+
+  /* === Selectable items with feel of opening a tome === */
+  details {
+    background: rgba(20, 14, 8, 0.06);
+    border: 1px dashed rgba(138,100,32,0.4);
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+
+  /* Range / slider bar for HP (if used elsewhere) */
+  .filigree { background-image: none; } /* override old class — body bg now handles it */
+
+  /* Reduce default Tailwind ring for our inputs to the gold style */
+  input:focus, select:focus, textarea:focus, button:focus { outline-color: var(--gold); }
+
+  /* === HELPER: panel inner section card on parchment === */
+  .vellum {
+    background: linear-gradient(180deg, rgba(255,248,220,0.55) 0%, rgba(218,196,140,0.40) 100%);
+    border: 1px solid rgba(138,100,32,0.30);
+    border-radius: 6px;
+    padding: 8px;
+  }
+
+  /* Row hover on parchment lists */
+  .row-hover:hover { background: rgba(212,168,87,0.10); }
+
+  /* === BONUS PILL (devant chaque comp/sauvegarde) === */
+  .bonus-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 30px;
+    padding: 0 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 50% 30%, #fbf2d6 0%, #ead7a3 60%, #c9b27c 100%);
+    border: 1.5px solid var(--gold-deep);
+    border-radius: 7px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.45),
+      inset 0 -2px 3px rgba(138,100,32,0.30),
+      0 2px 3px rgba(0,0,0,0.30);
+    text-shadow: 0 1px 0 rgba(255,245,210,0.40);
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .bonus-pill.maitrise {
+    background:
+      radial-gradient(ellipse at 50% 30%, #f5d680 0%, #d4a857 50%, #8a6420 100%);
+    color: var(--ink);
+    border-color: #5a4015;
+    box-shadow:
+      inset 0 1px 0 rgba(255,240,180,0.55),
+      inset 0 -2px 3px rgba(0,0,0,0.25),
+      0 0 10px rgba(212,168,87,0.40),
+      0 2px 3px rgba(0,0,0,0.30);
+  }
+  .bonus-pill.expert {
+    background:
+      radial-gradient(ellipse at 50% 30%, #d44848 0%, #8e1818 60%, #5e0e0e 100%);
+    color: var(--gold-light);
+    border-color: #4a0808;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.60);
+    box-shadow:
+      inset 0 1px 0 rgba(255,200,180,0.40),
+      inset 0 -2px 3px rgba(0,0,0,0.30),
+      0 0 10px rgba(182,40,40,0.40),
+      0 2px 3px rgba(0,0,0,0.30);
+  }
+
+  /* === CARAC SHIELD (très visible) === */
+  .carac-shield {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 22%, #fbf2d6 0%, #ead7a3 55%, #c9b27c 100%);
+    border: 2px solid var(--gold-deep);
+    border-radius: 10px;
+    padding: 10px 8px 8px;
+    text-align: center;
+    box-shadow:
+      inset 0 1px 0 rgba(255,245,210,0.55),
+      inset 0 0 14px rgba(184,138,58,0.30),
+      0 4px 8px rgba(0,0,0,0.45);
+  }
+  .carac-shield::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(138,100,32,0.45);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .carac-shield > * { position: relative; z-index: 1; }
+  .carac-shield .label {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .carac-shield .modifier {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 44px;
+    line-height: 1;
+    color: var(--ink);
+    text-shadow:
+      1px 1px 0 rgba(255,245,210,0.50),
+      0 2px 0 rgba(138,100,32,0.20);
+    margin: 2px 0 6px;
+  }
+  .carac-shield .score-orb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, #fff8e0 0%, #d6bf80 60%, #8a6420 100%);
+    border: 2px solid var(--gold-deep);
+    box-shadow:
+      inset 0 0 6px rgba(138,100,32,0.45),
+      0 2px 4px rgba(0,0,0,0.35);
+    color: var(--ink);
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 17px;
+    cursor: pointer;
+  }
+  .carac-shield input.score-input {
+    width: 50px;
+    margin-top: 4px;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 800;
+    font-size: 14px;
+    background: rgba(255,248,220,0.85);
+    border: 1px solid var(--gold-deep);
+    color: var(--ink);
+    border-radius: 6px;
+    padding: 3px 4px;
+  }
+  .carac-shield input.score-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(240,212,128,0.40);
+  }
+</style>
+</head>
+<body class="filigree">
+<div id="root" class="min-h-screen"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+// ============================================================
+// DONNÉES D&D 5e 2024
+// ============================================================
+
+const CARACS = [
+  { id: 'for', nom: 'Force', en: 'Strength' },
+  { id: 'dex', nom: 'Dextérité', en: 'Dexterity' },
+  { id: 'con', nom: 'Constitution', en: 'Constitution' },
+  { id: 'int', nom: 'Intelligence', en: 'Intelligence' },
+  { id: 'sag', nom: 'Sagesse', en: 'Wisdom' },
+  { id: 'cha', nom: 'Charisme', en: 'Charisma' },
+];
+
+const COMPETENCES = [
+  { id: 'acrobaties', nom: 'Acrobaties', carac: 'dex' },
+  { id: 'arcanes', nom: 'Arcanes', carac: 'int' },
+  { id: 'athletisme', nom: 'Athlétisme', carac: 'for' },
+  { id: 'discretion', nom: 'Discrétion', carac: 'dex' },
+  { id: 'dressage', nom: 'Dressage', carac: 'sag' },
+  { id: 'escamotage', nom: 'Escamotage', carac: 'dex' },
+  { id: 'histoire', nom: 'Histoire', carac: 'int' },
+  { id: 'intimidation', nom: 'Intimidation', carac: 'cha' },
+  { id: 'investigation', nom: 'Investigation', carac: 'int' },
+  { id: 'medecine', nom: 'Médecine', carac: 'sag' },
+  { id: 'nature', nom: 'Nature', carac: 'int' },
+  { id: 'perception', nom: 'Perception', carac: 'sag' },
+  { id: 'perspicacite', nom: 'Perspicacité', carac: 'sag' },
+  { id: 'persuasion', nom: 'Persuasion', carac: 'cha' },
+  { id: 'religion', nom: 'Religion', carac: 'int' },
+  { id: 'representation', nom: 'Représentation', carac: 'cha' },
+  { id: 'survie', nom: 'Survie', carac: 'sag' },
+  { id: 'tromperie', nom: 'Tromperie', carac: 'cha' },
+];
+
+// Bonus de maîtrise par niveau (1-20)
+const PROF_BY_LEVEL = [0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6];
+
+// XP requis pour atteindre chaque niveau
+const XP_BY_LEVEL = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+
+// Emplacements de sorts par niveau (lanceurs complets)
+const SLOTS_FULL = {
+//niv  1  2  3  4  5  6  7  8  9
+  1:  [2,0,0,0,0,0,0,0,0],
+  2:  [3,0,0,0,0,0,0,0,0],
+  3:  [4,2,0,0,0,0,0,0,0],
+  4:  [4,3,0,0,0,0,0,0,0],
+  5:  [4,3,2,0,0,0,0,0,0],
+  6:  [4,3,3,0,0,0,0,0,0],
+  7:  [4,3,3,1,0,0,0,0,0],
+  8:  [4,3,3,2,0,0,0,0,0],
+  9:  [4,3,3,3,1,0,0,0,0],
+  10: [4,3,3,3,2,0,0,0,0],
+  11: [4,3,3,3,2,1,0,0,0],
+  12: [4,3,3,3,2,1,0,0,0],
+  13: [4,3,3,3,2,1,1,0,0],
+  14: [4,3,3,3,2,1,1,0,0],
+  15: [4,3,3,3,2,1,1,1,0],
+  16: [4,3,3,3,2,1,1,1,0],
+  17: [4,3,3,3,2,1,1,1,1],
+  18: [4,3,3,3,3,1,1,1,1],
+  19: [4,3,3,3,3,2,1,1,1],
+  20: [4,3,3,3,3,2,2,1,1],
+};
+
+// Demi-lanceurs (Paladin, Rôdeur)
+const SLOTS_HALF = {
+  1:  [0,0,0,0,0],
+  2:  [2,0,0,0,0],
+  3:  [3,0,0,0,0],
+  4:  [3,0,0,0,0],
+  5:  [4,2,0,0,0],
+  6:  [4,2,0,0,0],
+  7:  [4,3,0,0,0],
+  8:  [4,3,0,0,0],
+  9:  [4,3,2,0,0],
+  10: [4,3,2,0,0],
+  11: [4,3,3,0,0],
+  12: [4,3,3,0,0],
+  13: [4,3,3,1,0],
+  14: [4,3,3,1,0],
+  15: [4,3,3,2,0],
+  16: [4,3,3,2,0],
+  17: [4,3,3,3,1],
+  18: [4,3,3,3,1],
+  19: [4,3,3,3,2],
+  20: [4,3,3,3,2],
+};
+
+// Pacte de l'Occultiste (Warlock) — slots spéciaux
+const PACT_SLOTS = {
+  1: {slots:1, niv:1}, 2: {slots:2, niv:1}, 3: {slots:2, niv:2},
+  4: {slots:2, niv:2}, 5: {slots:2, niv:3}, 6: {slots:2, niv:3},
+  7: {slots:2, niv:4}, 8: {slots:2, niv:4}, 9: {slots:2, niv:5},
+  10:{slots:2, niv:5},11: {slots:3, niv:5},12:{slots:3, niv:5},
+  13:{slots:3, niv:5},14:{slots:3, niv:5},15:{slots:3, niv:5},
+  16:{slots:3, niv:5},17:{slots:4, niv:5},18:{slots:4, niv:5},
+  19:{slots:4, niv:5},20:{slots:4, niv:5},
+};
+
+const CLASSES = {
+  barbare: {
+    nom: 'Barbare', en:'Barbarian', dv: 12, sauvegardes: ['for','con'],
+    progression: 'aucune', carac_sort: null,
+    armures: ['légères','intermédiaires','boucliers'],
+    armes: ['simples','de guerre'],
+    competences_choix: 2,
+    competences_dispo: ['animal','athletisme','intimidation','nature','perception','survie'],
+  },
+  barde: {
+    nom: 'Barde', en:'Bard', dv: 8, sauvegardes: ['dex','cha'],
+    progression: 'complete', carac_sort: 'cha',
+    armures: ['légères'],
+    armes: ['simples'],
+    competences_choix: 3,
+    competences_dispo: 'toutes',
+  },
+  clerc: {
+    nom: 'Clerc', en:'Cleric', dv: 8, sauvegardes: ['sag','cha'],
+    progression: 'complete', carac_sort: 'sag',
+    armures: ['légères','intermédiaires','boucliers'],
+    armes: ['simples'],
+    competences_choix: 2,
+    competences_dispo: ['histoire','medecine','perspicacite','persuasion','religion'],
+  },
+  druide: {
+    nom: 'Druide', en:'Druid', dv: 8, sauvegardes: ['int','sag'],
+    progression: 'complete', carac_sort: 'sag',
+    armures: ['légères','intermédiaires','boucliers (pas métalliques)'],
+    armes: ['simples'],
+    competences_choix: 2,
+    competences_dispo: ['arcanes','dressage','medecine','nature','perception','perspicacite','religion','survie'],
+  },
+  ensorceleur: {
+    nom: 'Ensorceleur', en:'Sorcerer', dv: 6, sauvegardes: ['con','cha'],
+    progression: 'complete', carac_sort: 'cha',
+    armures: [],
+    armes: ['simples'],
+    competences_choix: 2,
+    competences_dispo: ['arcanes','intimidation','perspicacite','persuasion','religion','tromperie'],
+  },
+  guerrier: {
+    nom: 'Guerrier', en:'Fighter', dv: 10, sauvegardes: ['for','con'],
+    progression: 'aucune', carac_sort: null,
+    armures: ['toutes','boucliers'],
+    armes: ['simples','de guerre'],
+    competences_choix: 2,
+    competences_dispo: ['acrobaties','animal','athletisme','histoire','intimidation','perception','perspicacite','survie'],
+  },
+  magicien: {
+    nom: 'Magicien', en:'Wizard', dv: 6, sauvegardes: ['int','sag'],
+    progression: 'complete', carac_sort: 'int',
+    armures: [],
+    armes: ['simples'],
+    competences_choix: 2,
+    competences_dispo: ['arcanes','histoire','investigation','medecine','nature','perspicacite','religion'],
+  },
+  moine: {
+    nom: 'Moine', en:'Monk', dv: 8, sauvegardes: ['for','dex'],
+    progression: 'aucune', carac_sort: null,
+    armures: [],
+    armes: ['simples','armes moine'],
+    competences_choix: 2,
+    competences_dispo: ['acrobaties','athletisme','histoire','perspicacite','religion','discretion'],
+  },
+  paladin: {
+    nom: 'Paladin', en:'Paladin', dv: 10, sauvegardes: ['sag','cha'],
+    progression: 'demi', carac_sort: 'cha',
+    armures: ['toutes','boucliers'],
+    armes: ['simples','de guerre'],
+    competences_choix: 2,
+    competences_dispo: ['athletisme','intimidation','medecine','perspicacite','persuasion','religion'],
+  },
+  rodeur: {
+    nom: 'Rôdeur', en:'Ranger', dv: 10, sauvegardes: ['for','dex'],
+    progression: 'demi', carac_sort: 'sag',
+    armures: ['légères','intermédiaires','boucliers'],
+    armes: ['simples','de guerre'],
+    competences_choix: 3,
+    competences_dispo: ['athletisme','dressage','discretion','investigation','nature','perception','perspicacite','survie'],
+  },
+  roublard: {
+    nom: 'Roublard', en:'Rogue', dv: 8, sauvegardes: ['dex','int'],
+    progression: 'aucune', carac_sort: null,
+    armures: ['légères'],
+    armes: ['simples'],
+    competences_choix: 4,
+    competences_dispo: ['acrobaties','athletisme','discretion','escamotage','intimidation','investigation','perception','perspicacite','persuasion','tromperie'],
+  },
+  occultiste: {
+    nom: 'Occultiste', en:'Warlock', dv: 8, sauvegardes: ['sag','cha'],
+    progression: 'pacte', carac_sort: 'cha',
+    armures: ['légères'],
+    armes: ['simples'],
+    competences_choix: 2,
+    competences_dispo: ['arcanes','histoire','intimidation','investigation','nature','religion','tromperie'],
+  },
+};
+
+const ESPECES = {
+  humain:    { nom:'Humain', en:'Human', taille:'M', vitesse:30, traits:['Talent (1 origine)','Compétent (1 compétence)','Résolu (Inspiration au repos long)'] },
+  elfe:      { nom:'Elfe', en:'Elf', taille:'M', vitesse:30, traits:['Vision dans le noir 18m','Ascendance féerique','Transe (4h repos)','Sens affûtés (Perception)'] },
+  nain:      { nom:'Nain', en:'Dwarf', taille:'M', vitesse:30, traits:['Vision dans le noir 36m','Robustesse naine (+1 PV/niv)','Résistance dommages poison','Connaissance de la pierre'] },
+  halfelin:  { nom:'Halfelin', en:'Halfling', taille:'P', vitesse:30, traits:['Chanceux (relance 1 nat)','Brave (avantage vs effrayé)','Agilité halfeline','Discrétion innée'] },
+  drakeide:  { nom:'Drakéide', en:'Dragonborn', taille:'M', vitesse:30, traits:['Ascendance draconique','Souffle (action bonus)','Résistance au type d\'énergie','Vol draconique (niv 5)'] },
+  gnome:     { nom:'Gnome', en:'Gnome', taille:'P', vitesse:30, traits:['Vision dans le noir 18m','Ruse gnome (avantage sauv. INT/SAG/CHA contre magie)'] },
+  demielfe:  { nom:'Demi-Elfe', en:'Half-Elf', taille:'M', vitesse:30, traits:['Vision dans le noir','Ascendance féerique','Compétences supplémentaires'] },
+  demiorque: { nom:'Demi-Orque', en:'Half-Orc', taille:'M', vitesse:30, traits:['Vision dans le noir','Endurance implacable','Attaques sauvages'] },
+  tieffelin: { nom:'Tieffelin', en:'Tiefling', taille:'M', vitesse:30, traits:['Vision dans le noir 18m','Héritage infernal/abyssal/chthonien','Résistance feu','Sorts innés'] },
+  aasimar:   { nom:'Aasimar', en:'Aasimar', taille:'M', vitesse:30, traits:['Vision dans le noir 18m','Mains soignantes','Lumière céleste','Révélation céleste (niv 3)'] },
+  goliath:   { nom:'Goliath', en:'Goliath', taille:'M', vitesse:35, traits:['Ascendance géante (don variable)','Robustesse de pierre'] },
+  orc:       { nom:'Orc', en:'Orc', taille:'M', vitesse:30, traits:['Vision dans le noir 36m','Endurance implacable','Course agressive'] },
+};
+
+const HISTORIQUES = {
+  acolyte:    { nom:'Acolyte', talent:'Initié à la magie (Clerc)', caracs:['INT','SAG','CHA'], comps:['perspicacite','religion'] },
+  artisan:    { nom:'Artisan', talent:'Compétent', caracs:['FOR','DEX','INT'], comps:['investigation','persuasion'] },
+  artiste:    { nom:'Artiste', talent:'Doué', caracs:['FOR','DEX','CHA'], comps:['acrobaties','representation'] },
+  charlatan:  { nom:'Charlatan', talent:'Doué', caracs:['DEX','CON','CHA'], comps:['escamotage','tromperie'] },
+  criminel:   { nom:'Criminel', talent:'Alerte', caracs:['DEX','CON','INT'], comps:['discretion','escamotage'] },
+  ermite:     { nom:'Ermite', talent:'Initié à la magie (Magicien)', caracs:['CON','SAG','CHA'], comps:['medecine','religion'] },
+  fermier:    { nom:'Fermier', talent:'Robuste', caracs:['FOR','CON','SAG'], comps:['animal','nature'] },
+  guide:      { nom:'Guide', talent:'Magie sauvage', caracs:['DEX','CON','SAG'], comps:['discretion','survie'] },
+  marin:      { nom:'Marin', talent:'Bagarreur de taverne', caracs:['FOR','DEX','SAG'], comps:['acrobaties','perception'] },
+  marchand:   { nom:'Marchand', talent:'Chanceux', caracs:['CON','INT','CHA'], comps:['animal','persuasion'] },
+  noble:      { nom:'Noble', talent:'Compétent', caracs:['FOR','INT','CHA'], comps:['histoire','persuasion'] },
+  sage:       { nom:'Sage', talent:'Initié à la magie (Magicien)', caracs:['CON','INT','SAG'], comps:['arcanes','histoire'] },
+  scribe:     { nom:'Scribe', talent:'Compétent', caracs:['DEX','INT','SAG'], comps:['investigation','perception'] },
+  soldat:     { nom:'Soldat', talent:'Belluaire', caracs:['FOR','DEX','CON'], comps:['athletisme','intimidation'] },
+  voyou:      { nom:'Voyou', talent:'Doué', caracs:['DEX','INT','CHA'], comps:['discretion','tromperie'] },
+  vagabond:   { nom:'Vagabond Urbain', talent:'Talentueux', caracs:['DEX','SAG','CHA'], comps:['discretion','escamotage'] },
+};
+
+// === ARMURES (D&D 5e) ===
+const ARMURES = {
+  aucune:        { nom:'Aucune', type:'aucune',        ca_base:10, dex_max:null, str_min:0,  furtivite_dis:false },
+  // Légères (DEX intégral)
+  matelassee:    { nom:'Matelassée', type:'légère',    ca_base:11, dex_max:null, str_min:0,  furtivite_dis:true  },
+  cuir:          { nom:'Cuir', type:'légère',          ca_base:11, dex_max:null, str_min:0,  furtivite_dis:false },
+  cuir_cloute:   { nom:'Cuir clouté', type:'légère',   ca_base:12, dex_max:null, str_min:0,  furtivite_dis:false },
+  // Intermédiaires (DEX max +2)
+  peaux:         { nom:'Peaux', type:'intermédiaire',  ca_base:12, dex_max:2,    str_min:0,  furtivite_dis:false },
+  chemise_mailles: { nom:'Chemise de mailles', type:'intermédiaire', ca_base:13, dex_max:2, str_min:0, furtivite_dis:false },
+  ecailles:      { nom:'Écailles', type:'intermédiaire', ca_base:14, dex_max:2,  str_min:0,  furtivite_dis:true  },
+  cuirasse:      { nom:'Cuirasse', type:'intermédiaire', ca_base:14, dex_max:2,  str_min:0,  furtivite_dis:false },
+  brigandine:    { nom:'Brigandine', type:'intermédiaire', ca_base:14, dex_max:2, str_min:0, furtivite_dis:false },
+  demi_plate:    { nom:'Demi-plate', type:'intermédiaire', ca_base:15, dex_max:2, str_min:0, furtivite_dis:true  },
+  // Lourdes (pas de DEX)
+  cotte_anneaux: { nom:'Cotte d\'anneaux', type:'lourde', ca_base:14, dex_max:0, str_min:0,  furtivite_dis:true  },
+  cotte_mailles: { nom:'Cotte de mailles', type:'lourde', ca_base:16, dex_max:0, str_min:13, furtivite_dis:true  },
+  clibanion:     { nom:'Clibanion', type:'lourde',     ca_base:17, dex_max:0,    str_min:15, furtivite_dis:true  },
+  harnois:       { nom:'Harnois (Plate)', type:'lourde', ca_base:18, dex_max:0,  str_min:15, furtivite_dis:true  },
+};
+
+const ETATS = [
+  { id:'aveugle', nom:'Aveuglé', en:'Blinded', desc:'Échec auto aux jets nécessitant la vue. Att avec dés. / Att contre lui avec avantage.' },
+  { id:'charme', nom:'Charmé', en:'Charmed', desc:'Ne peut attaquer le charmeur. Le charmeur a avantage aux interactions sociales.' },
+  { id:'sourd', nom:'Assourdi', en:'Deafened', desc:'Échec auto aux jets nécessitant l\'ouïe.' },
+  { id:'effraye', nom:'Effrayé', en:'Frightened', desc:'Désavantage aux tests/att tant qu\'il voit la source. Ne peut volontairement s\'en approcher.' },
+  { id:'agrippe', nom:'Agrippé', en:'Grappled', desc:'Vitesse 0. Se termine si l\'agrippeur est neutralisé.' },
+  { id:'incapable', nom:'Neutralisé', en:'Incapacitated', desc:'Aucune action, action bonus, réaction. Pas de mouvement. Concentration brisée.' },
+  { id:'invisible', nom:'Invisible', en:'Invisible', desc:'Impossible à voir sans magie. Att avec avantage. / Att contre lui avec dés.' },
+  { id:'paralyse', nom:'Paralysé', en:'Paralyzed', desc:'Neutralisé, vitesse 0. Coup critique auto à <1,5m. Échec sauv FOR/DEX.' },
+  { id:'petrifie', nom:'Pétrifié', en:'Petrified', desc:'Transformé en pierre. Neutralisé. Résistance à tous les dégâts.' },
+  { id:'empoisonne', nom:'Empoisonné', en:'Poisoned', desc:'Désavantage aux jets d\'attaque et de caractéristique.' },
+  { id:'terre', nom:'À terre', en:'Prone', desc:'Att de mêlée avec avantage contre lui. Att à dés. Ses att avec désavantage. Demi-vitesse pour se relever.' },
+  { id:'entrave', nom:'Entravé', en:'Restrained', desc:'Vitesse 0. Att avec dés. / Att contre lui avec avantage. Désavantage sauv DEX.' },
+  { id:'etourdi', nom:'Étourdi', en:'Stunned', desc:'Neutralisé, ne peut bouger. Échec auto sauv FOR/DEX. Att contre lui avantage.' },
+  { id:'inconscient', nom:'Inconscient', en:'Unconscious', desc:'Neutralisé, à terre, lâche objets, échec auto FOR/DEX. Att avantage. Crit auto à <1,5m.' },
+  { id:'epuisement', nom:'Épuisement', en:'Exhaustion', desc:'1 niveau = -2 aux d20 et CD. 6 niveaux = mort. Récupère 1 niveau par repos long.' },
+  { id:'concentration', nom:'Concentration', en:'Concentrating', desc:'Maintient un sort. Sauv. CON CD 10 ou moitié dégâts (le + élevé) si touché.' },
+];
+
+// Persistance
+const STORAGE_KEY = 'dnd2024-character-v3';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) { console.warn('load err', e); }
+  return null;
+}
+
+function saveState(s) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  } catch(e) { console.warn('save err', e); }
+}
+
+const mod = (v) => Math.floor((Number(v||10)-10)/2);
+const fmt = (n) => n>=0 ? `+${n}` : `${n}`;
+
+// Personnage par défaut : THORK (pré-rempli depuis ta fiche AideDD)
+function defaultCharacter() {
+  return {
+    version: 3,
+    nom: 'Thork',
+    espece: 'demiorque',
+    classe: 'clerc',
+    sousClasse: 'Tempête',
+    historique: 'marin',
+    niveau: 4,
+    xp: 0,
+    inspiration: false,
+    alignement: 'Neutre Mauvais',
+    pronoms: 'il',
+    age: '36',
+    taille: '2 m',
+    poids: '95 kg',
+    yeux: 'jaune profond',
+    peau: 'grise/vert',
+    cheveux: 'noirs en bataille',
+    apparence: 'Sa peau est d’un gris pâle teinté de vert, ses yeux brillent d’un jaune profond, et ses longs cheveux noirs sont en bataille. Thork porte des vêtements sombres et usés, ornés de bagues en or, avec un tatouage de kraken visible sur son bras musclé. Son corps est marqué de nombreuses cicatrices de bataille.',
+    histoire_perso: 'J\'étais le capitaine redouté d\'un navire pirate qui sévit au large des côtes. Tellement sûr de lui que je n\'ai pas vu la mutinerie de mon second qui m\'a trompé et jeté à la mer lors d\'un combat. En me noyant presque j\'ai promis de me venger auprès du dieu de la tempête Talos qui m\'a sauvé. Mais il m\'a fait promettre de tuer pour lui l\'ange déchu. Depuis je fais profil bas, cherchant le bon moment pour retrouver mon équipage et me venger. Mon nom de pirate "le kraken noir".',
+    traits: 'Je garde toujours un œil sur l\'horizon et un autre sur le dos de ceux que je crois proches.',
+    ideaux: '« La vraie foi, c\'est la capacité d\'imposer sa volonté dans le chaos. Comme la tempête, je ne me plie à personne. »',
+    liens: 'J\'ai juré de retrouver le traître qui a volé mon équipage. Mon marteau portera le jugement.',
+    defauts: '- Pedophobique (je déteste les enfants)\n- J\'ai une idée très précise de ce que je souhaite pour ma mort et j\'ai toujours mon testament sur moi.',
+    caracs: { for:16, dex:8, con:14, int:10, sag:17, cha:12 },
+    bonus_caracs: { for:1, dex:0, con:0, int:0, sag:0, cha:0 }, // bonus appliqué à tous les jets de cette carac (pour matcher AideDD : +1 FOR)
+    competences_maitrisees: ['athletisme','intimidation','perspicacite','medecine','perception'],
+    competences_expertise: [],
+    sauvegardes_extra: [],
+    pv_max: 31,
+    pv_actuels: 31,
+    pv_temp: 0,
+    ca: 12, // CA "manuelle" — utilisée uniquement si auto_ca=false
+    auto_ca: true, // si vrai, la CA est calculée depuis l'équipement
+    armure_id: 'cuir',
+    bouclier_equipe: true,
+    ca_bonus_magique: 0, // bonus magique (cape de protection +1, anneau +2, etc.)
+    initiative_bonus: 5, // Don Vigilant : +5 init
+    vitesse: 9, // mètres
+    des_vie_total: 4,
+    des_vie_utilises: 0,
+    death_saves: { success: 0, failure: 0 },
+    slots_used: [0,0,0,0,0,0,0,0,0],
+    pact_slots_used: 0,
+    sorts_connus: [
+      // Cantrips
+      { id:'flamme_sacree', prepare:true, cantrip:true },
+      { id:'reparation', prepare:true, cantrip:true },
+      { id:'thaumaturgie', prepare:true, cantrip:true },
+      { id:'assistance', prepare:true, cantrip:true },
+      // Sorts de domaine Tempête (toujours préparés, gratuits)
+      { id:'nappe_brouillard', prepare:true, domaine:true },
+      { id:'vague_tonnante', prepare:true, domaine:true },
+      { id:'bourrasque', prepare:true, domaine:true },
+      { id:'fracassement', prepare:true, domaine:true },
+      // Sorts préparés
+      { id:'creation_destruction_eau', prepare:true },
+      { id:'eclair_tracant', prepare:true },
+      { id:'protection_mal_bien', prepare:true },
+      { id:'immobilisation_personne', prepare:true },
+    ],
+    sorts_caracteristique_override: null,
+    etats: [],
+    inventaire: [
+      { id:'i1', nom:'Armure de cuir', qte:1, poids:5, desc:'CA 11 + DEX, légère', equipe:true },
+      { id:'i2', nom:'Bouclier', qte:1, poids:3, desc:'+2 CA', equipe:true },
+      { id:'i3', nom:'Symbole sacré / emblème', qte:1, poids:0.5, desc:'Focaliseur divin', equipe:true },
+      { id:'i4', nom:'Sac à dos', qte:1, poids:2.5, desc:'' },
+      { id:'i5', nom:'Sac de couchage', qte:1, poids:3.5 },
+      { id:'i6', nom:'Gamelle', qte:1, poids:0.5 },
+      { id:'i7', nom:'Boîte d\'allume-feu', qte:1, poids:0.5 },
+      { id:'i8', nom:'Torche', qte:10, poids:0.5 },
+      { id:'i9', nom:'Rations (1 jour)', qte:10, poids:1 },
+      { id:'i10', nom:'Gourde', qte:1, poids:2.5 },
+      { id:'i11', nom:'Corde en chanvre 15m', qte:1, poids:5 },
+      { id:'i12', nom:'Corde en soie 15m', qte:1, poids:2.5 },
+      { id:'i13', nom:'Vêtements communs', qte:1, poids:1.5 },
+      { id:'i14', nom:'Cabillot d\'amarrage', qte:1, poids:0.5 },
+      { id:'i15', nom:'Porte-bonheur', qte:1, poids:0 },
+      { id:'i16', nom:'Bourse', qte:1, poids:0.5 },
+      { id:'i17', nom:'Testament', qte:1, poids:0, desc:'Volonté pour sa mort' },
+      { id:'i18', nom:'Pieu', qte:1, poids:1 },
+      { id:'i19', nom:'Carreaux d\'arbalète', qte:20, poids:0.05 },
+      { id:'i20', nom:'Cache-œil', qte:1, poids:0 },
+    ],
+    armes: [
+      { id:'a1', nom:'Marteau de guerre', bonus:'+5', degats:'1d8+3', type:'contondant', portee:'CàC', props:'Polyvalente (1d10)', equipe:true, carac:'for' },
+      { id:'a2', nom:'Marteau léger', bonus:'+5', degats:'1d4+3', type:'contondant', portee:'CàC / 6m-18m', props:'Légère, Lancer', equipe:true, carac:'for' },
+      { id:'a3', nom:'Arbalète lourde', bonus:'+6', degats:'1d10', type:'perforant', portee:'30m / 120m', props:'Lourde, Chargement, 2 mains (override depuis AideDD)', equipe:true, carac:'dex' },
+    ],
+    or: 14, argent: 60, cuivre: 0, electrum: 0, platine: 0,
+    notes: '',
+    historique_evenements: [],
+    capacites: [
+      { id:'c1', nom:'Vision dans le noir', source:'Demi-orc', desc:'18 m. Vous voyez en pénombre comme en pleine lumière, et dans le noir comme en pénombre (en nuances de gris).' },
+      { id:'c2', nom:'Menaçant', source:'Demi-orc', desc:'Maîtrise de la compétence Intimidation.' },
+      { id:'c3', nom:'Endurance implacable', source:'Demi-orc', desc:'Lorsque vous tombez à 0 PV mais n\'êtes pas tué, vous passez à 1 PV. Récupère après un repos long.', charges_max:1, charges_used:0, recovery:'long' },
+      { id:'c4', nom:'Attaques sauvages', source:'Demi-orc', desc:'Sur un coup critique en mêlée, vous lancez un dé de dégâts d\'arme supplémentaire et l\'ajoutez aux dégâts du critique.' },
+      { id:'c5', nom:'Place à bord', source:'Marin', desc:'Vous trouvez toujours une place à bord d\'un navire en échange de travail.' },
+      { id:'c6', nom:'Don Vigilant', source:'Don', desc:'+5 à l\'initiative ; vous ne pouvez pas être surpris tant que vous êtes conscient ; les autres créatures n\'ont pas l\'avantage en attaque contre vous parce que vous ne les voyez pas.' },
+      { id:'c7', nom:'Fureur de l\'ouragan', source:'Clerc Tempête (niv 1)', desc:'Réaction quand une créature à 1,5m vous touche : elle fait sauv DEX (DD = DD sorts). Échec : 2d8 dégâts foudre OU tonnerre (au choix). Réussite : moitié.', charges_max:3, charges_used:0, recovery:'long' },
+      { id:'c8', nom:'Conduit divin : Renvoi des morts-vivants', source:'Clerc (niv 2)', desc:'Action. Présentez votre symbole sacré. Chaque MV à 9m qui vous voit/entend fait sauv SAG (DD 13). Échec : renvoyé 1 minute (fuit, ne peut s\'approcher, pas de réactions, action Foncer/Esquive seulement). Brisé si dégâts.', charges_max:1, charges_used:0, recovery:'court' },
+      { id:'c9', nom:'Conduit divin : Fureur destructrice', source:'Clerc Tempête (niv 2)', desc:'Quand vous infligez des dégâts de foudre ou de tonnerre, vous pouvez utiliser votre Conduit divin pour les maximiser au lieu de les lancer.', charges_max:1, charges_used:0, recovery:'court' },
+      { id:'c10', nom:'Bénédiction de la voyante Eva', source:'Aventure', desc:'+1d4 sur le prochain jet de votre choix.', charges_max:1, charges_used:0, recovery:'manuel' },
+    ],
+    maitrises_armes: 'Armes courantes, armes de guerre',
+    maitrises_armures: 'Armures légères, intermédiaires, lourdes (Tempête), boucliers',
+    maitrises_outils: 'Outils de navigateur, véhicules (aquatiques)',
+    langues: 'Commun, Orc',
+    sorts_a_preparer: 7,
+    dd_sorts: 13,
+    bonus_attaque_sort: 5,
+  };
+}
+
+// ============================================================
+// SORTS — Base de données condensée FR (D&D 5e 2024)
+// ============================================================
+// classes : codes B(arde) C(lerc) D(ruide) E(nsorceleur) G(uerrier-EK) M(agicien) P(aladin) R(ôdeur) O(ccultiste) AT(Roublard) Art(ificier)
+const SORTS = []; // sera rempli après — injecté dans bloc séparé pour lisibilité
+
+// Base de données de sorts D&D 5e 2024 (FR) — focus Clerc + classiques
+// classes : B(arde) C(lerc) D(ruide) E(nsorceleur) M(agicien) P(aladin) R(ôdeur) O(ccultiste)
+window.__SORTS_DATA__ = [
+  // ===== CANTRIPS (niveau 0) =====
+  { id:'flamme_sacree', nom:'Flamme sacrée', niveau:0, ecole:'Évocation', classes:['C'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'Instantanée', desc:'Une flamme descend sur une cible visible. Sauv DEX ou subit 1d8 dégâts radiants (le ciblé n\'a aucun bénéfice de couvert). Dégâts +1d8 aux niv 5/11/17.' },
+  { id:'reparation', nom:'Réparation', niveau:0, ecole:'Transmutation', classes:['B','C','D','M'], temps:'1 minute', portee:'Contact', comp:'V, S, M (deux aimants)', duree:'Instantanée', desc:'Répare une cassure unique sur un objet (chaîne brisée, clé cassée, voile déchirée…). Aucune trace de la réparation.' },
+  { id:'thaumaturgie', nom:'Thaumaturgie', niveau:0, ecole:'Transmutation', classes:['C'], temps:'1 action', portee:'9 m', comp:'V', duree:"1 minute", desc:'Effet mineur magique (voix amplifiée x3, vacillement de flammes, vibration mineure, cliquetis, claquement de porte 1,5m, modification yeux). Jusqu\'à 3 effets simultanés.' },
+  { id:'assistance', nom:'Assistance', niveau:0, ecole:'Divination', classes:['B','C','D'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Concentration, jusqu\'à 1 minute', conc:true, desc:'Une créature touchée gagne 1d4 supplémentaire à un test de carac de son choix avant la fin du sort. Le dé peut être lancé avant ou après le d20.' },
+  { id:'lumiere', nom:'Lumière', niveau:0, ecole:'Évocation', classes:['B','C','M'], temps:'1 action', portee:'Contact', comp:'V, M (ver luisant)', duree:'1 heure', desc:'Un objet touché ≤3m émet une lumière vive sur 6m et faible sur 6m de plus, couleur au choix.' },
+  { id:'guidance', nom:'Conseil', niveau:0, ecole:'Divination', classes:['C','D'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Concentration, 1 minute', conc:true, desc:'Une créature touchée ajoute 1d4 à un test de caractéristique de son choix.' },
+  { id:'resistance', nom:'Résistance', niveau:0, ecole:'Abjuration', classes:['C','D'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Concentration, 1 minute', conc:true, desc:'Une créature touchée ajoute 1d4 à un jet de sauvegarde de son choix.' },
+  { id:'mot_radiance', nom:'Mot radieux', niveau:0, ecole:'Évocation', classes:['C'], temps:'1 action', portee:'1,5 m (toutes)', comp:'V, M (foc)', duree:'Instantanée', desc:'Toutes les créatures choisies dans 1,5m font sauv CON ou subissent 1d6 dégâts radiants. +1d6 aux niv 5/11/17.' },
+  { id:'gel', nom:'Gel', niveau:0, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'1 round', desc:'Sauv CON ou 1d6 dégâts froid + vitesse réduite de 3m. +1d6 aux niv 5/11/17.' },
+  { id:'projectile_magique', nom:'Trait mystique', niveau:0, ecole:'Évocation', classes:['E','M','O'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Instantanée', desc:'Att magique : 1d10 dégâts au choix (acide, foudre, force, feu, froid, poison, psychique, radiant, tonnerre). +1 dé aux niv 5/11/17.' },
+  { id:'main_du_mage', nom:'Main du mage', niveau:0, ecole:'Invocation', classes:['B','E','M','O'], temps:'1 action', portee:'9 m', comp:'V, S', duree:'1 minute', desc:'Une main flottante peut manipuler des objets ≤4,5kg, ouvrir des portes, sortir un objet d\'un sac, etc.' },
+  { id:'priste', nom:'Prestidigitation', niveau:0, ecole:'Transmutation', classes:['B','E','M','O'], temps:'1 action', portee:'3 m', comp:'V, S', duree:'1 heure (selon effet)', desc:'Tour de magie mineur : odeur, étincelle, nettoie/salit objet ≤30cm, refroidit/réchauffe matériau ≤30cm, faire un effet sensoriel mineur, etc.' },
+  { id:'rayon_givre', nom:'Rayon de givre', niveau:0, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'Instantanée', desc:'Att magique : 1d8 dégâts froid, et la cible voit sa vitesse réduite de 3m. +1d8 aux niv 5/11/17.' },
+  { id:'epee_psychique', nom:'Épée psychique', niveau:0, ecole:'Enchantement', classes:['B','E','M','O'], temps:'1 action', portee:'18 m', comp:'S', duree:'Instantanée', desc:'Att magique : 1d6 dégâts psychiques. La prochaine att de la cible se fait à dés contre l\'objet de votre choix. +1d6 aux niv 5/11/17.' },
+  { id:'contondement', nom:'Contondement', niveau:0, ecole:'Évocation', classes:['B','D','E','M','O'], temps:'1 action', portee:'1,5 m', comp:'V, S, M (arme)', duree:'Instantanée', desc:'Att de mêlée : dégâts d\'arme + 1d8 tonnerre. La cible doit faire sauv FOR ou est repoussée de 3m.' },
+  { id:'lame_de_feu_verte', nom:'Lame de feu verte', niveau:0, ecole:'Évocation', classes:['E','M','O'], temps:'1 action', portee:'1,5 m', comp:'V, S, M (arme)', duree:'Instantanée', desc:'Att de mêlée : dégâts arme + un éclair vert touche autre cible à ≤1,5m pour mod magie en dégâts feu.' },
+  { id:'epee_de_glace', nom:'Lame de feu froide', niveau:0, ecole:'Évocation', classes:['E','M','O'], temps:'1 action', portee:'1,5 m', comp:'V, S, M (arme)', duree:'Instantanée', desc:'Att mêlée : dégâts + cible et créature à 1,5m subit dégâts froid mod magie. Vitesse réduite -3m round suivant.' },
+  { id:'epargne_les_mourants', nom:'Épargne aux mourants', niveau:0, ecole:'Nécromancie', classes:['C','D'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Instantanée', desc:'Une créature à 0 PV est stabilisée.' },
+  { id:'simulacre_de_vie', nom:'Simulacre de vie', niveau:0, ecole:'Nécromancie', classes:['M','O'], temps:'1 action', portee:'30m', comp:'V, S', duree:'1 round', desc:'Connaissez l\'emplacement et le statut (PV) des créatures vivantes ou mortes-vivantes ≤30m (sauf abris épais).' },
+  { id:'message', nom:'Message', niveau:0, ecole:'Transmutation', classes:['B','E','M'], temps:'1 action', portee:'36 m', comp:'V, S, M (cuivre)', duree:'1 round', desc:'Murmure un message audible uniquement par la cible. Elle peut répondre.' },
+  { id:'dancing_lights', nom:'Lumières dansantes', niveau:0, ecole:'Évocation', classes:['B','E','M'], temps:'1 action', portee:'36 m', comp:'V, S, M', duree:'Concentration 1 min', conc:true, desc:'4 lumières flottent et bougent à 18m/round. Lumière faible 3m chacune (peuvent fusionner).' },
+  { id:'feu_sacre', nom:'Feu Sacré', niveau:0, ecole:'Évocation', classes:['C'], temps:'1 action', portee:'18m', comp:'V, S', duree:'Instantanée', desc:'Idem flamme sacrée — alias.' },
+
+  // ===== NIVEAU 1 =====
+  { id:'nappe_brouillard', nom:'Nappe de brouillard', niveau:1, ecole:'Invocation', classes:['D','E','M','R'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Concentration 1 heure', conc:true, desc:'Crée une sphère de brouillard de 6m de rayon. La zone est totalement obscurcie. Le vent fort la dissipe en 4 rounds. Si lancé à un niv supérieur, +6m de rayon.' },
+  { id:'vague_tonnante', nom:'Vague tonnante', niveau:1, ecole:'Évocation', classes:['B','D','E','M'], temps:'1 action', portee:'Personnelle (cube de 4,5m)', comp:'V, S', duree:'Instantanée', desc:'Cube 4,5m. Sauv CON. Échec : 2d8 tonnerre + repoussé de 3m. Réussite : moitié, pas de recul. +1d8 par niveau supérieur.' },
+  { id:'creation_destruction_eau', nom:'Création ou destruction d\'eau', niveau:1, ecole:'Transmutation', classes:['C','D'], temps:'1 action', portee:'9 m', comp:'V, S, M (goutte d\'eau)', duree:'Instantanée', desc:'Crée jusqu\'à 40L d\'eau OU détruit jusqu\'à 40L d\'eau (ou brouillard) dans un cube de 9m. +20L par niveau supérieur.' },
+  { id:'eclair_tracant', nom:'Éclair traçant', niveau:1, ecole:'Évocation', classes:['C'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Instantanée', desc:'Att magique. Touche : 4d6 dégâts foudre. Si la cible est en armure métallique, dés à attaque. +1d6 par niveau supérieur.' },
+  { id:'protection_mal_bien', nom:'Protection contre le mal et le bien', niveau:1, ecole:'Abjuration', classes:['C','M','P','O'], temps:'1 action', portee:'Contact', comp:'V, S, M (poudre d\'argent)', duree:'Concentration 10 min', conc:true, desc:'Cible immunisée à charme/effrayé/possession par célestes/élémentaires/féeriques/fiélons/morts-vivants/aberrations. Att de ces créatures à dés contre la cible.' },
+  { id:'soins', nom:'Soins', niveau:1, ecole:'Abjuration', classes:['B','C','D','P','R'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Instantanée', desc:'Une créature touchée récupère 2d8 + mod sort PV. +2d8 par niveau supérieur.' },
+  { id:'mot_de_guerison', nom:'Mot de guérison', niveau:1, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action bonus', portee:'18 m', comp:'V', duree:'Instantanée', desc:'Une créature visible récupère 1d4 + mod sort PV. +1d4 par niveau supérieur.' },
+  { id:'benediction', nom:'Bénédiction', niveau:1, ecole:'Enchantement', classes:['C','P'], temps:'1 action', portee:'9 m', comp:'V, S, M (huile sainte)', duree:'Concentration 1 min', conc:true, desc:'3 créatures gagnent +1d4 sur les jets d\'attaque et de sauvegarde. +1 cible par niveau supérieur.' },
+  { id:'bouclier_foi', nom:'Bouclier de la foi', niveau:1, ecole:'Abjuration', classes:['C','P'], temps:'1 action bonus', portee:'18 m', comp:'V, S, M (parchemin sacré)', duree:'Concentration 10 min', conc:true, desc:'+2 CA pour une créature.' },
+  { id:'sanctuaire', nom:'Sanctuaire', niveau:1, ecole:'Abjuration', classes:['C'], temps:'1 action bonus', portee:'9 m', comp:'V, S, M (miroir)', duree:'1 minute', desc:'Une créature protégée. Tout attaquant fait sauv SAG ou doit choisir une autre cible. La protection cesse si le bénéficiaire attaque ou lance un sort offensif.' },
+  { id:'detection_magie', nom:'Détection de la magie', niveau:1, ecole:'Divination', classes:['B','C','D','P','R','E','M','O'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'Concentration 10 min', conc:true, ritu:true, desc:'Détecte la magie sur 9m. École de magie identifiable.' },
+  { id:'detection_mal_bien', nom:'Détection du mal et du bien', niveau:1, ecole:'Divination', classes:['C','P'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'Concentration 10 min', conc:true, desc:'Détecte célestes/élémentaires/féeriques/fiélons/MV/aberrations + objets/lieux consacrés ou profanés à 9m.' },
+  { id:'identification', nom:'Identification', niveau:1, ecole:'Divination', classes:['B','M'], temps:'1 minute', portee:'Contact', comp:'V, S, M (perle 100po)', duree:'Instantanée', ritu:true, desc:'Identifie un objet magique : propriétés, charges, sorts qui l\'affectent.' },
+  { id:'purification', nom:'Purification de nourriture et d\'eau', niveau:1, ecole:'Transmutation', classes:['C','D','P','R'], temps:'1 action', portee:'3 m', comp:'V, S', duree:'Instantanée', ritu:true, desc:'Toute la nourriture/eau dans une sphère 1,5m de rayon est purifiée.' },
+  { id:'orientation', nom:'Orientation', niveau:1, ecole:'Divination', classes:['C','D'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'8 heures', ritu:true, desc:'Ne se perd pas. Vitesse double à parcourir terrains connus.' },
+  { id:'image_silencieuse', nom:'Image silencieuse', niveau:1, ecole:'Illusion', classes:['B','E','M'], temps:'1 action', portee:'18 m', comp:'V, S, M (laine)', duree:'Concentration 10 min', conc:true, desc:'Crée une image visuelle dans un cube de 4,5m. Pas de son.' },
+  { id:'projectile_magie', nom:'Projectile magique', niveau:1, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Instantanée', desc:'3 dards de force, chacun 1d4+1 dégâts (touchent automatiquement). +1 dard par niveau supérieur.' },
+  { id:'bouclier', nom:'Bouclier', niveau:1, ecole:'Abjuration', classes:['E','M'], temps:'1 réaction (touché ou trait magique)', portee:'Personnelle', comp:'V, S', duree:'1 round', desc:'+5 CA jusqu\'au début de votre prochain tour, immunisé à trait magique.' },
+  { id:'sommeil', nom:'Sommeil', niveau:1, ecole:'Enchantement', classes:['B','E','M'], temps:'1 action', portee:'27 m', comp:'V, S, M (sable)', duree:'1 minute', desc:'Endort des créatures pour un total de 5d8 PV (les plus faibles d\'abord). +2d8 par niveau supérieur.' },
+  { id:'charme_personne', nom:'Charme-personne', niveau:1, ecole:'Enchantement', classes:['B','D','E','M','O'], temps:'1 action', portee:'9 m', comp:'V, S', duree:'1 heure', desc:'Sauv SAG (avantage si en combat). Échec : charmé. +1 cible par niveau.' },
+  { id:'graisse', nom:'Graisse', niveau:1, ecole:'Invocation', classes:['M'], temps:'1 action', portee:'18 m', comp:'V, S, M (suif)', duree:'1 minute', desc:'Carré 3m de terrain difficile et glissant. Sauv DEX ou tombe à terre.' },
+  { id:'main_brulante', nom:'Mains brûlantes', niveau:1, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'Cône 4,5m', comp:'V, S', duree:'Instantanée', desc:'Cône 4,5m. Sauv DEX. Échec : 3d6 feu. Réussite : moitié. +1d6 par niveau.' },
+  { id:'amis_animaux', nom:'Amitié avec les animaux', niveau:1, ecole:'Enchantement', classes:['B','D','R'], temps:'1 action', portee:'9 m', comp:'V, S', duree:'24 heures', desc:'Bête INT≤3 fait sauv SAG ou est charmée par vous.' },
+  { id:'parler_animaux', nom:'Communication avec les animaux', niveau:1, ecole:'Divination', classes:['B','D','R'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'10 minutes', ritu:true, desc:'Comprenez et parlez aux bêtes.' },
+  { id:'detection_poison', nom:'Détection du poison et des maladies', niveau:1, ecole:'Divination', classes:['C','D','P','R'], temps:'1 action', portee:'Personnelle (9m)', comp:'V, S, M', duree:'Concentration 10 min', conc:true, ritu:true, desc:'Détecte poisons/créatures empoisonnées/maladies.' },
+  { id:'enchevetrement', nom:'Enchevêtrement', niveau:1, ecole:'Invocation', classes:['D','R'], temps:'1 action', portee:'27 m', comp:'V, S', duree:'Concentration 1 min', conc:true, desc:'Carré 6m. Sauv FOR ou entravé. Plantes croissent.' },
+  { id:'rapidite_image', nom:'Image miroir', niveau:2, ecole:'Illusion', classes:['E','M','O'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'1 minute', desc:'3 doubles vous accompagnent. Si attaque : 1d6 (3 doubles=1-6, 2=1-8, 1=11+) sinon double touché.' },
+
+  // ===== NIVEAU 2 =====
+  { id:'immobilisation_personne', nom:'Immobilisation de personne', niveau:2, ecole:'Enchantement', classes:['B','C','D','E','M','O'], temps:'1 action', portee:'18 m', comp:'V, S, M (fer)', duree:'Concentration 1 min', conc:true, desc:'Humanoïde sauv SAG. Échec : paralysé 1 min (re-sauv chaque round). +1 cible par niveau supérieur.' },
+  { id:'bourrasque', nom:'Bourrasque', niveau:2, ecole:'Évocation', classes:['D','E','M'], temps:'1 action', portee:'Personnelle (ligne 18m)', comp:'V, S, M (graine)', duree:'Concentration 1 min', conc:true, desc:'Ligne 18m × 3m de vent. Sauv FOR. Échec : repoussé 4,5m. Cible avançant dans la ligne dépense 6m pour 3m. Vent disperse gaz/brouillard.' },
+  { id:'fracassement', nom:'Fracassement', niveau:2, ecole:'Évocation', classes:['B','C','D','E','M','O'], temps:'1 action', portee:'18 m', comp:'V, S, M (mica)', duree:'Instantanée', desc:'Sphère 3m. Sauv CON. Échec : 3d8 tonnerre. Réussite : moitié. Construits/objets: dés à sauv. +1d8 par niveau.' },
+  { id:'aide', nom:'Aide', niveau:2, ecole:'Abjuration', classes:['B','C','P'], temps:'1 action', portee:'9 m', comp:'V, S, M (gomme)', duree:'8 heures', desc:'3 créatures : PV max et actuels +5. +5 par niveau supérieur.' },
+  { id:'arme_spirituelle', nom:'Arme spirituelle', niveau:2, ecole:'Évocation', classes:['C'], temps:'1 action bonus', portee:'18 m', comp:'V, S', duree:'1 minute', desc:'Crée une arme flottante. Action bonus pour att magique : 1d8 + mod sort dégâts force. Mouvement 6m action bonus. +1d8 tous les 2 niveaux supérieurs.' },
+  { id:'arme_magique', nom:'Arme magique', niveau:2, ecole:'Transmutation', classes:['P','M','C'], temps:'1 action bonus', portee:'Contact', comp:'V, S', duree:'Concentration 1 heure', conc:true, desc:'Une arme non-magique devient magique +1. +2 niv 4, +3 niv 6.' },
+  { id:'cecite_surdite', nom:'Cécité/Surdité', niveau:2, ecole:'Nécromancie', classes:['B','C','E','M'], temps:'1 action', portee:'9 m', comp:'V', duree:'1 minute', desc:'Sauv CON. Échec : aveugle ou sourd. +1 cible par niveau.' },
+  { id:'amelioration_carac', nom:'Amélioration de caractéristique', niveau:2, ecole:'Transmutation', classes:['B','C','D','E','M'], temps:'1 action', portee:'Contact', comp:'V, S, M', duree:'Concentration 1 heure', conc:true, desc:'Au choix : avantage tests FOR / DEX / CON / INT / SAG / CHA, ou x2 charge (FOR), ou pas dégâts chute 6m (DEX).' },
+  { id:'silence', nom:'Silence', niveau:2, ecole:'Illusion', classes:['B','C','R'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Concentration 10 min', conc:true, ritu:true, desc:'Sphère 6m de silence. Aucun son. Immunité tonnerre. Pas de sort verbal possible.' },
+  { id:'priere_soins', nom:'Prière de soins', niveau:2, ecole:'Abjuration', classes:['C'], temps:'10 minutes', portee:'9 m', comp:'V, S', duree:'Instantanée', desc:'6 créatures (max 1/perso/repos long) récupèrent 2d8 + mod sort PV. +1d8 par niveau supérieur.' },
+  { id:'protection_poison', nom:'Protection contre le poison', niveau:2, ecole:'Abjuration', classes:['C','D','P','R'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'1 heure', desc:'Neutralise un poison sur la cible. Avantage sauv contre poison + résistance dégâts poison pour 1 heure.' },
+  { id:'restauration_mineure', nom:'Restauration mineure', niveau:2, ecole:'Abjuration', classes:['B','C','D','P','R'], temps:'1 action', portee:'Contact', comp:'V, S', duree:'Instantanée', desc:'Met fin à : maladie, paralysie, charme, empoisonné OU sourd/muet sur la cible.' },
+  { id:'localisation_objet', nom:'Localisation d\'objet', niveau:2, ecole:'Divination', classes:['B','C','D','M','P','R'], temps:'1 action', portee:'Personnelle (300m)', comp:'V, S, M', duree:'Concentration 10 min', conc:true, desc:'Sentir la direction d\'un objet à ≤300m que vous connaissez ou décrivez précisément.' },
+  { id:'augure', nom:'Augure', niveau:2, ecole:'Divination', classes:['C'], temps:'1 minute', portee:'Personnelle', comp:'V, S, M (encens 25po + bâtonnets/dés)', duree:'Instantanée', ritu:true, desc:'Demandez à votre divinité un présage sur les 30 prochaines minutes : "bien", "mal", "bien et mal", "neutre" ou "rien".' },
+  { id:'detection_pensees', nom:'Détection des pensées', niveau:2, ecole:'Divination', classes:['B','E','M','O'], temps:'1 action', portee:'Personnelle', comp:'V, S, M', duree:'Concentration 1 min', conc:true, desc:'Lit les pensées superficielles d\'une créature ≤9m. Sauv SAG pour résister une exploration plus profonde.' },
+  { id:'invisibilite', nom:'Invisibilité', niveau:2, ecole:'Illusion', classes:['B','E','M','O','A'], temps:'1 action', portee:'Contact', comp:'V, S, M (cils)', duree:'Concentration 1 heure', conc:true, desc:'Cible invisible. Brisé si elle attaque ou lance un sort. +1 cible par niveau supérieur.' },
+  { id:'image_miroir', nom:'Image miroir', niveau:2, ecole:'Illusion', classes:['E','M','O'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'1 minute', desc:'3 doubles. Sur attaque, 1d6 : 1-6→un double touché (1 image=1-3, 2=1-2, 3=1).' },
+  { id:'rayon_d_aff', nom:'Rayon affaiblissant', niveau:2, ecole:'Nécromancie', classes:['M','O'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'Concentration 1 min', conc:true, desc:'Att magique : 4d6 nécrotique. Cible touchée fait moitié dégâts FOR jusqu\'à fin du sort.' },
+
+  // ===== NIVEAU 3 =====
+  { id:'eclair', nom:'Éclair', niveau:3, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'Personnelle (ligne 30m)', comp:'V, S, M (fourrure)', duree:'Instantanée', desc:'Ligne 30m × 1,5m. Sauv DEX. Échec : 8d6 foudre. Réussite : moitié. +1d6 par niveau supérieur.' },
+  { id:'boule_de_feu', nom:'Boule de feu', niveau:3, ecole:'Évocation', classes:['E','M'], temps:'1 action', portee:'45 m', comp:'V, S, M (boulette guano)', duree:'Instantanée', desc:'Sphère 6m. Sauv DEX. Échec : 8d6 feu. Réussite : moitié. +1d6 par niveau supérieur.' },
+  { id:'phare_espoir', nom:'Phare d\'espoir', niveau:3, ecole:'Abjuration', classes:['C'], temps:'1 action', portee:'9 m', comp:'V, S', duree:'Concentration 1 min', conc:true, desc:'Plusieurs cibles : avantage sauv SAG et jets contre la mort. Soins reçus = max possible.' },
+  { id:'esprits_gardiens', nom:'Esprits gardiens', niveau:3, ecole:'Invocation', classes:['C'], temps:'1 action', portee:'Personnelle (5m de rayon)', comp:'V, S, M', duree:'Concentration 10 min', conc:true, desc:'Aura 4,5m. Ennemis y entrant ou commençant tour : sauv SAG, échec 3d8 (radiant ou nécro), réussite moitié.' },
+  { id:'guidage_spirituel', nom:'Guidance spirituelle', niveau:3, ecole:'Invocation', classes:['C'], temps:'1 action', portee:'Personnelle', comp:'V, S, M', duree:'Concentration 1 minute', conc:true, desc:'Att et sauv +1d4 (et tu peux te déplacer 3m sans réaction).' },
+  { id:'rappel_a_la_vie', nom:'Rappel à la vie', niveau:3, ecole:'Nécromancie', classes:['C','P'], temps:'1 action', portee:'Contact', comp:'V, S, M (diamants 300po)', duree:'Instantanée', desc:'Une créature morte ≤1 minute revient à 1 PV. Pas pour MV/construct/morts de vieillesse.' },
+  { id:'dissipation_magie', nom:'Dissipation de la magie', niveau:3, ecole:'Abjuration', classes:['B','C','D','M','P','O','E'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Instantanée', desc:'Tous les sorts de niveau ≤3 sur la cible se terminent. Sorts plus haut : test mod sort vs CD 10+niv sort.' },
+  { id:'eclair_appel', nom:'Appel de la foudre', niveau:3, ecole:'Invocation', classes:['D','E'], temps:'1 action', portee:'Personnelle (36m)', comp:'V, S', duree:'Concentration 10 min', conc:true, desc:'Crée un nuage. Action : un éclair sur point ≤36m, sauv DEX, 3d10 foudre (moitié). Action bonus pour relancer. Outdoor en orage : 4d10.' },
+  { id:'tempete_grele', nom:'Tempête de grêle', niveau:3, ecole:'Invocation', classes:['D','E','M'], temps:'1 action', portee:'45 m', comp:'V, S, M', duree:'Concentration 1 min', conc:true, desc:'Cylindre 12m H × 12m R. Lourdement obscurci. Terrain glace difficile. Sauv DEX entrer, échec à terre.' },
+  { id:'animer_morts', nom:'Animation des morts', niveau:3, ecole:'Nécromancie', classes:['C','M'], temps:'1 minute', portee:'3 m', comp:'V, S, M', duree:'Instantanée', desc:'Un cadavre humanoïde devient zombie ou squelette sous votre contrôle (24h, renouvelable). +2 par niveau supérieur.' },
+  { id:'voler', nom:'Vol', niveau:3, ecole:'Transmutation', classes:['E','M','O'], temps:'1 action', portee:'Contact', comp:'V, S, M (plume)', duree:'Concentration 10 min', conc:true, desc:'Cible vole 18m. +1 cible par niveau.' },
+  { id:'masse_de_soins', nom:'Mot de guérison de groupe', niveau:3, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action bonus', portee:'18 m', comp:'V', duree:'Instantanée', desc:'6 créatures récupèrent 1d4 + mod sort PV. +1d4 par niveau supérieur.' },
+  { id:'guerison_de_masse_3', nom:'Prière de soins (rappel)', niveau:3, ecole:'Abjuration', classes:['C'], temps:'10 min', portee:'9 m', comp:'V, S', duree:'Instantanée', desc:'Voir niv 2.' },
+  { id:'envoyer_message', nom:'Message mental', niveau:3, ecole:'Évocation', classes:['B','C','M'], temps:'1 action', portee:'Illimitée', comp:'V, S, M (cuivre)', duree:'1 round', desc:'Envoie un message court (≤25 mots) à n\'importe qui sur le même plan. Réponse possible.' },
+  { id:'parler_morts', nom:'Communication avec les morts', niveau:3, ecole:'Nécromancie', classes:['B','C'], temps:'10 min', portee:'3 m', comp:'V, S, M', duree:'10 minutes', desc:'5 questions à un cadavre ≤10 jours.' },
+  { id:'jour', nom:'Lumière du jour', niveau:3, ecole:'Évocation', classes:['B','C','D','P','R','E'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'1 heure', desc:'Sphère 18m de lumière vive (+18m faible). Considéré lumière du jour.' },
+  { id:'mur_vent', nom:'Mur de vent', niveau:3, ecole:'Évocation', classes:['D','R'], temps:'1 action', portee:'36 m', comp:'V, S, M (graine)', duree:'Concentration 1 min', conc:true, desc:'Mur 15m×4,5m×30cm. Bloque projectiles, repousse créatures.' },
+
+  // ===== NIVEAU 4 =====
+  { id:'banissement', nom:'Bannissement', niveau:4, ecole:'Abjuration', classes:['C','M','P','E','O'], temps:'1 action', portee:'18 m', comp:'V, S, M', duree:'Concentration 1 min', conc:true, desc:'Sauv CHA. Échec : créature renvoyée dans son plan d\'origine (ou semi-plan inoffensif si même plan). +1 cible par niveau.' },
+  { id:'maitrise_eau', nom:'Maîtrise de l\'eau', niveau:4, ecole:'Transmutation', classes:['C','D','M'], temps:'1 action', portee:'90 m', comp:'V, S, M (goutte+poussière)', duree:'Concentration 10 min', conc:true, desc:'Manipule un volume d\'eau (cube de 30m) : crue, séparation, redirection, vague, tourbillon.' },
+  { id:'protection_mort', nom:'Protection contre la mort', niveau:4, ecole:'Abjuration', classes:['C'], temps:'1 action', portee:'Contact', comp:'V, S, M', duree:'8 heures', desc:'Cible immunisée à dégâts nécrotiques + ne perd pas PV pour passer à <0. Première fois descend à 0 PV au lieu de mourir.' },
+  { id:'gardien_de_la_foi', nom:'Gardien de la foi', niveau:4, ecole:'Invocation', classes:['C'], temps:'1 action', portee:'9 m', comp:'V', duree:'8 heures', desc:'Crée gardien spectral. Ennemis ≤3m : sauv DEX. Échec : 20 dégâts radiants. Réussite : moitié. Disparait après 60 dégâts infligés.' },
+  { id:'liberte_mvt', nom:'Liberté de mouvement', niveau:4, ecole:'Abjuration', classes:['B','C','D','P','R'], temps:'1 action', portee:'Contact', comp:'V, S, M', duree:'1 heure', desc:'Cible immune aux effets ralentissants/entravants. Eau, tissus de toiles considérés terrain normal.' },
+
+  // ===== NIVEAU 5 =====
+  { id:'soins_de_masse', nom:'Soins de groupe', niveau:5, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'Instantanée', desc:'6 créatures récupèrent 3d8 + mod sort PV. +1d8 par niveau supérieur.' },
+  { id:'rayon_solaire', nom:'Trait de soleil', niveau:6, ecole:'Évocation', classes:['D','E','M'], temps:'1 action', portee:'18 m', comp:'V, S, M', duree:'Instantanée', desc:'Sphère 18m. Sauv CON. Échec : 6d8 radiants + aveuglé 1 min. Réussite : moitié.' },
+  { id:'frappe_flamboyante', nom:'Frappe flamboyante', niveau:5, ecole:'Évocation', classes:['C'], temps:'1 action', portee:'18 m', comp:'V, S, M', duree:'Instantanée', desc:'Pilier de feu. Cylindre 3m R × 12m H. Sauv DEX. Échec : 4d6 feu + 4d6 radiant. Réussite : moitié. +1d6 type au choix par niveau.' },
+  { id:'restauration_majeure', nom:'Restauration majeure', niveau:5, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action', portee:'Contact', comp:'V, S, M (diamants 100po)', duree:'Instantanée', desc:'Au choix : retire effet pétrification, charme, effrayé, malédiction, possession, ou réduit -1 niveau d\'épuisement, ou rend stat normale.' },
+  { id:'rappel_vie', nom:'Réincarnation', niveau:5, ecole:'Transmutation', classes:['D'], temps:'1 heure', portee:'Contact', comp:'V, S, M', duree:'Instantanée', desc:'Cadavre intact ≤10 jours revient dans nouveau corps (race aléatoire), 1 PV.' },
+  { id:'communion', nom:'Communion', niveau:5, ecole:'Divination', classes:['C'], temps:'1 minute', portee:'Personnelle', comp:'V, S, M (encens+huile sainte)', duree:'1 minute', ritu:true, desc:'3 questions oui/non/neutre à votre divinité.' },
+
+  // ===== NIVEAU 6+ pour Clerc =====
+  { id:'soin', nom:'Guérison', niveau:6, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action', portee:'18 m', comp:'V, S', duree:'Instantanée', desc:'70 PV restaurés à une créature. Met fin à : aveugle, sourd, et toute maladie. +10 PV par niveau supérieur.' },
+  { id:'mot_de_pouvoir_etourdir', nom:'Mot de pouvoir : étourdir', niveau:8, ecole:'Enchantement', classes:['B','E','M','O'], temps:'1 action', portee:'18 m', comp:'V', duree:'Variable', desc:'Cible ≤150 PV : étourdi. Sauv CON chaque round.' },
+  { id:'mot_pouvoir_tuer', nom:'Mot de pouvoir : tuer', niveau:9, ecole:'Enchantement', classes:['B','E','M','O'], temps:'1 action', portee:'18 m', comp:'V', duree:'Instantanée', desc:'Cible ≤100 PV : meurt. Pas de jet.' },
+
+  // ===== Sorts Paladin/Ranger emblématiques (utiles si tu changes) =====
+  { id:'frappe_divine_radieuse', nom:'Frappe divine radieuse', niveau:1, ecole:'Évocation', classes:['P'], temps:'1 action bonus', portee:'Personnelle', comp:'V', duree:'Concentration 1 min', conc:true, desc:'Prochaine att de mêlée : +2d6 dégâts radiants.' },
+  { id:'detect_evil_palad', nom:'Détection du mal et du bien (P)', niveau:1, ecole:'Divination', classes:['P','C'], temps:'1 action', portee:'Personnelle', comp:'V, S', duree:'Concentration 10 min', conc:true, desc:'Voir Détection du mal et du bien.' },
+  { id:'fleche_chasseur', nom:'Marque du chasseur', niveau:1, ecole:'Divination', classes:['R'], temps:'1 action bonus', portee:'27 m', comp:'V', duree:'Concentration 1 heure', conc:true, desc:'Marque une cible. +1d6 dégâts d\'arme contre elle. Avantage Perception/Survie pour la suivre.' },
+];
+
+// ============================================================
+// COMPOSANTS
+// ============================================================
+
+function App() {
+  const [state, setState] = useState(() => {
+    const loaded = loadState();
+    const def = defaultCharacter();
+    if (!loaded) return def;
+    // Migration : on fusionne les défauts avec les données sauvegardées
+    // pour ne pas perdre les nouveaux champs (ex : bonus_caracs)
+    const merged = { ...def, ...loaded };
+    // Fusion profonde pour bonus_caracs
+    merged.bonus_caracs = { ...def.bonus_caracs, ...(loaded.bonus_caracs||{}) };
+    return merged;
+  });
+  const [tab, setTab] = useState('fiche');
+  const [sorts] = useState(() => window.__SORTS_DATA__ || []);
+
+  useEffect(() => { saveState(state); }, [state]);
+
+  const update = useCallback((patch) => {
+    setState(s => ({ ...s, ...(typeof patch === 'function' ? patch(s) : patch) }));
+  }, []);
+
+  const classe = CLASSES[state.classe] || CLASSES.guerrier;
+  const espece = ESPECES[state.espece] || ESPECES.humain;
+  const histo = HISTORIQUES[state.historique] || HISTORIQUES.soldat;
+  const prof = PROF_BY_LEVEL[state.niveau] || 2;
+  const caracSort = state.sorts_caracteristique_override || classe.carac_sort;
+
+  return (
+    <div className="max-w-7xl mx-auto p-3 md:p-6">
+      <Header state={state} update={update} classe={classe} espece={espece} prof={prof} />
+      <Tabs tab={tab} setTab={setTab} hasSpells={!!classe.carac_sort || !!state.sorts_caracteristique_override} />
+      <div className="mt-4">
+        {tab === 'fiche' && <Fiche state={state} update={update} classe={classe} espece={espece} histo={histo} prof={prof} />}
+        {tab === 'tracker' && <Tracker state={state} update={update} classe={classe} prof={prof} />}
+        {tab === 'sorts' && <Sorts state={state} update={update} classe={classe} prof={prof} sortsDB={sorts} caracSort={caracSort} />}
+        {tab === 'inventaire' && <Inventaire state={state} update={update} prof={prof} />}
+        {tab === 'niveau' && <LevelUp state={state} update={update} classe={classe} />}
+        {tab === 'capacites' && <Capacites state={state} update={update} classe={classe} espece={espece} histo={histo} />}
+        {tab === 'notes' && <Notes state={state} update={update} />}
+        {tab === 'reglages' && <Reglages state={state} update={update} setState={setState} />}
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+function Header({ state, update, classe, espece, prof }) {
+  return (
+    <div className="parchment rounded-xl p-4 md:p-6 mb-3 relative">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          {/* Ornament (sigil) */}
+          <div className="hidden md:flex flex-col items-center gap-1 shrink-0">
+            <div className="wax-seal" title={classe.nom}>
+              {classe.nom.slice(0,1)}
+            </div>
+            <div className="smallcaps ink-faint" style={{color:'var(--ink-soft)', fontSize:'9px'}}>{classe.nom}</div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <input
+              value={state.nom}
+              onChange={e=>update({nom:e.target.value})}
+              className="cinzel text-3xl md:text-5xl font-black bg-transparent border-b border-transparent hover:border-amber-700/40 w-full focus:outline-none focus:border-amber-700 ink"
+              style={{letterSpacing:'0.05em'}}
+            />
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="smallcaps" style={{color:'var(--ink-soft)'}}>{espece.nom}</span>
+              <span style={{color:'var(--gold-deep)'}}>•</span>
+              <span className="smallcaps" style={{color:'var(--ink-soft)'}}>{classe.nom}{state.sousClasse ? ` · ${state.sousClasse}` : ''}</span>
+              <span style={{color:'var(--gold-deep)'}}>•</span>
+              <span className="smallcaps" style={{color:'var(--ink-soft)'}}>{state.alignement}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="stat-box rounded-lg p-2 text-center min-w-[80px]">
+            <div className="smallcaps" style={{color:'var(--ink-soft)', fontSize:'10px'}}>Niveau</div>
+            <div className="cinzel text-4xl font-black ink leading-none mt-0.5">{state.niveau}</div>
+          </div>
+          <div className="stat-box rounded-lg p-2 text-center min-w-[80px]">
+            <div className="smallcaps" style={{color:'var(--ink-soft)', fontSize:'10px'}}>Maîtrise</div>
+            <div className="cinzel text-3xl font-black ink leading-none mt-1">+{prof}</div>
+          </div>
+          <button
+            onClick={()=>update({inspiration: !state.inspiration})}
+            className={`wax-seal shimmer ${state.inspiration ? 'glowing' : ''}`}
+            style={!state.inspiration ? {background:'radial-gradient(circle at 35% 30%, #2a2a30 0%, #14141a 70%, #08060a 100%)', borderColor:'var(--gold-deep)', color:'var(--gold-deep)'} : {}}
+            title="Inspiration héroïque (clic pour activer/désactiver)"
+          >
+            {state.inspiration ? '★' : '☆'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Tabs({ tab, setTab, hasSpells }) {
+  const items = [
+    { id:'fiche', label:'Fiche', icon:<TabIcon name="scroll" /> },
+    { id:'tracker', label:'Tracker', icon:<TabIcon name="heart" /> },
+    ...(hasSpells ? [{ id:'sorts', label:'Sorts', icon:<TabIcon name="spark" /> }] : []),
+    { id:'capacites', label:'Capacités', icon:<TabIcon name="bolt" /> },
+    { id:'inventaire', label:'Inventaire', icon:<TabIcon name="bag" /> },
+    { id:'niveau', label:'Niveau', icon:<TabIcon name="medal" /> },
+    { id:'notes', label:'Notes', icon:<TabIcon name="quill" /> },
+    { id:'reglages', label:'Réglages', icon:<TabIcon name="gear" /> },
+  ];
+  return (
+    <div className="tabbar">
+      {items.map(it => (
+        <button
+          key={it.id}
+          onClick={()=>setTab(it.id)}
+          className={`tab-btn flex items-center gap-1.5 ${tab===it.id ? 'active' : ''}`}
+        >
+          <span className="opacity-90">{it.icon}</span>
+          <span className="hidden sm:inline">{it.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TabIcon({ name }) {
+  const stroke = "currentColor";
+  const sz = 16;
+  const common = { width: sz, height: sz, viewBox: "0 0 24 24", fill: "none", stroke, strokeWidth: "1.6", strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case 'scroll':
+      return <svg {...common}><path d="M5 4h11a3 3 0 0 1 3 3v10a3 3 0 0 0 3 3H8a3 3 0 0 1-3-3V4z"/><path d="M5 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3"/><path d="M9 8h7M9 12h7"/></svg>;
+    case 'heart':
+      return <svg {...common}><path d="M12 21s-7-4.5-9.5-9.2C.7 8.4 2.5 4 6.5 4 9 4 10.7 5.5 12 7c1.3-1.5 3-3 5.5-3 4 0 5.8 4.4 4 7.8C19 16.5 12 21 12 21z"/></svg>;
+    case 'spark':
+      return <svg {...common}><path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"/></svg>;
+    case 'bolt':
+      return <svg {...common}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>;
+    case 'bag':
+      return <svg {...common}><path d="M5 8h14l-1.2 12a2 2 0 0 1-2 2H8.2a2 2 0 0 1-2-2L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>;
+    case 'swords':
+      return <svg {...common}><path d="M14 5l5-3 1 1-3 5-3-3z"/><path d="M5 5L3 4 4 3l3 1M14 5l-9 9-2 5 5-2 9-9"/><path d="M5 14l5 5"/></svg>;
+    case 'medal':
+      return <svg {...common}><circle cx="12" cy="14" r="6"/><path d="M9 9 7 3h10l-2 6"/><path d="M12 11v3M10 14h4"/></svg>;
+    case 'quill':
+      return <svg {...common}><path d="M21 3L8 16l-2 5 5-2L21 6V3z"/><path d="M14 10l-3 3"/></svg>;
+    case 'gear':
+      return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>;
+    default: return null;
+  }
+}
+
+function Footer() {
+  return (
+    <div className="text-center mt-8 pb-6 relative">
+      <div className="divider mx-auto" style={{maxWidth:'380px'}}></div>
+      <div className="cinzel smallcaps" style={{color:'var(--gold-mid)', fontSize:'10px'}}>
+        Assistant D&D 5e · 2024 · Sauvegarde locale · Hors-ligne
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// FICHE — onglet principal
+// ============================================================
+
+function Fiche({ state, update, classe, espece, histo, prof }) {
+  const setCarac = (id, val) => {
+    update(s => ({ caracs: { ...s.caracs, [id]: Math.max(1, Math.min(30, Number(val)||10)) } }));
+  };
+  const toggleComp = (id) => {
+    update(s => {
+      const has = s.competences_maitrisees.includes(id);
+      return { competences_maitrisees: has
+        ? s.competences_maitrisees.filter(x=>x!==id)
+        : [...s.competences_maitrisees, id] };
+    });
+  };
+  const toggleExp = (id) => {
+    update(s => {
+      const has = s.competences_expertise.includes(id);
+      const nouv = has ? s.competences_expertise.filter(x=>x!==id) : [...s.competences_expertise, id];
+      // Forcer maîtrise si expertise
+      const m = has ? s.competences_maitrisees : (s.competences_maitrisees.includes(id) ? s.competences_maitrisees : [...s.competences_maitrisees, id]);
+      return { competences_expertise: nouv, competences_maitrisees: m };
+    });
+  };
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-4">
+      {/* Colonne gauche — caracs + sauvegardes */}
+      <div className="space-y-3">
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Caractéristiques</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {CARACS.map(c => (
+              <div key={c.id} className="carac-shield">
+                <div className="label">{c.nom}</div>
+                <div className="modifier">{fmt(mod(state.caracs[c.id]))}</div>
+                <input
+                  type="number"
+                  value={state.caracs[c.id]}
+                  onChange={e=>setCarac(c.id, e.target.value)}
+                  className="score-input"
+                  title="Score brut"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Jets de Sauvegarde</h3>
+          <div className="space-y-1">
+            {CARACS.map(c => {
+              const maitrise = (classe.sauvegardes||[]).includes(c.id) || (state.sauvegardes_extra||[]).includes(c.id);
+              const overrideC = (state.bonus_caracs||{})[c.id] || 0;
+              const bonus = mod(state.caracs[c.id]) + (maitrise ? prof : 0) + overrideC;
+              return (
+                <label key={c.id} className="flex items-center gap-3 py-1 row-hover rounded-md px-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={maitrise}
+                    onChange={() => {
+                      if ((classe.sauvegardes||[]).includes(c.id)) return;
+                      update(s => {
+                        const has = (s.sauvegardes_extra||[]).includes(c.id);
+                        return { sauvegardes_extra: has
+                          ? (s.sauvegardes_extra||[]).filter(x=>x!==c.id)
+                          : [...(s.sauvegardes_extra||[]), c.id] };
+                      });
+                    }}
+                    disabled={(classe.sauvegardes||[]).includes(c.id)}
+                  />
+                  <span className={`bonus-pill ${maitrise?'maitrise':''}`}>{fmt(bonus)}</span>
+                  <span className="ink flex-1 cinzel" style={{fontSize:'14px', fontWeight:600}}>{c.nom}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Colonne centrale — compétences */}
+      <div className="parchment rounded-xl p-4 max-h-[820px] overflow-y-auto scroll-thin">
+        <h3 className="section-title">Compétences</h3>
+        <div className="text-xs ink mb-2 italic text-center" style={{color:'var(--ink-faint)'}}>
+          Cocher = maîtrise · Double-clic = expertise
+        </div>
+        <div className="space-y-0.5">
+          {COMPETENCES.map(c => {
+            const maitrise = state.competences_maitrisees.includes(c.id);
+            const expertise = state.competences_expertise.includes(c.id);
+            const overrideC = (state.bonus_caracs||{})[c.carac] || 0;
+            const bonus = mod(state.caracs[c.carac]) + (maitrise ? prof : 0) + (expertise ? prof : 0) + overrideC;
+            return (
+              <div key={c.id} className="flex items-center gap-3 py-1 row-hover rounded-md px-2">
+                <input
+                  type="checkbox"
+                  checked={maitrise}
+                  onChange={()=>toggleComp(c.id)}
+                  onDoubleClick={()=>toggleExp(c.id)}
+                />
+                <span className={`bonus-pill ${expertise?'expert':maitrise?'maitrise':''}`}>{fmt(bonus)}</span>
+                <span className="ink flex-1 cinzel" style={{fontSize:'13px', fontWeight:600}}>
+                  {c.nom}
+                  <span className="ml-1.5 smallcaps" style={{color:'var(--ink-faint)', fontSize:'9px', fontWeight:600}}>
+                    {c.carac}
+                  </span>
+                </span>
+                {expertise && <span className="gold" style={{fontSize:'14px'}} title="Expertise">★</span>}
+              </div>
+            );
+          })}
+        </div>
+        <div className="divider"></div>
+        <div className="vellum">
+          <div className="smallcaps cinzel" style={{color:'var(--ink-soft)', fontSize:'10px', textAlign:'center', marginBottom:'6px'}}>Perceptions passives</div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div className="bonus-pill maitrise mx-auto" style={{minWidth:'40px'}}>{10 + mod(state.caracs.sag) + (state.competences_maitrisees.includes('perception')?prof:0) + (state.competences_expertise.includes('perception')?prof:0) + ((state.bonus_caracs||{}).sag||0)}</div>
+              <div className="smallcaps mt-1" style={{color:'var(--ink-soft)', fontSize:'9px'}}>Perception</div>
+            </div>
+            <div>
+              <div className="bonus-pill mx-auto" style={{minWidth:'40px'}}>{10 + mod(state.caracs.int) + (state.competences_maitrisees.includes('investigation')?prof:0) + (state.competences_expertise.includes('investigation')?prof:0) + ((state.bonus_caracs||{}).int||0)}</div>
+              <div className="smallcaps mt-1" style={{color:'var(--ink-soft)', fontSize:'9px'}}>Investigation</div>
+            </div>
+            <div>
+              <div className="bonus-pill maitrise mx-auto" style={{minWidth:'40px'}}>{10 + mod(state.caracs.sag) + (state.competences_maitrisees.includes('perspicacite')?prof:0) + (state.competences_expertise.includes('perspicacite')?prof:0) + ((state.bonus_caracs||{}).sag||0)}</div>
+              <div className="smallcaps mt-1" style={{color:'var(--ink-soft)', fontSize:'9px'}}>Perspicacité</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Colonne droite — combat stats */}
+      <div className="space-y-3">
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Statistiques de combat</h3>
+          {/* CA avec breakdown auto */}
+          <CABlock state={state} update={update} />
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <FieldNum label="Init." value={mod(state.caracs.dex)+(Number(state.initiative_bonus)||0)} readonly />
+            <FieldNum label="Vitesse" value={state.vitesse} onChange={v=>update({vitesse:v})} suffix="m" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            <FieldNum label="PV max" value={state.pv_max} onChange={v=>update({pv_max:v, pv_actuels: Math.min(state.pv_actuels, v)})} />
+            <FieldNum label="PV act." value={state.pv_actuels} onChange={v=>update({pv_actuels:v})} />
+            <FieldNum label="PV temp" value={state.pv_temp} onChange={v=>update({pv_temp:v})} />
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <FieldNum label="Dés vie tot" value={state.des_vie_total} onChange={v=>update({des_vie_total:v})} suffix={`d${classe.dv}`} />
+            <FieldNum label="Dés util." value={state.des_vie_utilises} onChange={v=>update({des_vie_utilises:v})} />
+          </div>
+          <div className="mt-2 text-xs ink">
+            <strong>Bonus init :</strong> <input type="number" value={state.initiative_bonus} onChange={e=>update({initiative_bonus:Number(e.target.value)||0})} className="input-dnd w-12" /> (Vigilant +5, etc.)
+          </div>
+        </div>
+
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Identité</h3>
+          <Field label="Espèce" value={state.espece} onChange={v=>update({espece:v})} type="select" options={Object.entries(ESPECES).map(([k,v])=>[k,v.nom])} />
+          <Field label="Classe" value={state.classe} onChange={v=>update({classe:v})} type="select" options={Object.entries(CLASSES).map(([k,v])=>[k,v.nom])} />
+          <Field label="Sous-classe" value={state.sousClasse} onChange={v=>update({sousClasse:v})} />
+          <Field label="Historique" value={state.historique} onChange={v=>update({historique:v})} type="select" options={Object.entries(HISTORIQUES).map(([k,v])=>[k,v.nom])} />
+          <Field label="Alignement" value={state.alignement} onChange={v=>update({alignement:v})} />
+          <Field label="Pronoms" value={state.pronoms} onChange={v=>update({pronoms:v})} />
+          <div className="grid grid-cols-3 gap-2">
+            <Field label="Âge" value={state.age} onChange={v=>update({age:v})} />
+            <Field label="Taille" value={state.taille} onChange={v=>update({taille:v})} />
+            <Field label="Poids" value={state.poids} onChange={v=>update({poids:v})} />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Field label="Yeux" value={state.yeux} onChange={v=>update({yeux:v})} />
+            <Field label="Peau" value={state.peau} onChange={v=>update({peau:v})} />
+            <Field label="Cheveux" value={state.cheveux} onChange={v=>update({cheveux:v})} />
+          </div>
+          <FieldArea label="Apparence" value={state.apparence} onChange={v=>update({apparence:v})} />
+        </div>
+
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Personnalité</h3>
+          <FieldArea label="Traits" value={state.traits} onChange={v=>update({traits:v})} />
+          <FieldArea label="Idéaux" value={state.ideaux} onChange={v=>update({ideaux:v})} />
+          <FieldArea label="Liens" value={state.liens} onChange={v=>update({liens:v})} />
+          <FieldArea label="Défauts" value={state.defauts} onChange={v=>update({defauts:v})} />
+        </div>
+
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Histoire du personnage</h3>
+          <FieldArea label="Récit" value={state.histoire_perso} onChange={v=>update({histoire_perso:v})} />
+        </div>
+
+        <div className="parchment rounded-xl p-4">
+          <h3 className="section-title">Bonus de caractéristique custom</h3>
+          <div className="text-xs ink mb-2 italic" style={{color:'var(--ink-faint)'}}>
+            Bonus appliqué à TOUS les jets utilisant cette carac (saves + skills + passives). Utile pour ceintures de force, items magiques, overrides AideDD, etc.
+          </div>
+          <div className="grid grid-cols-6 gap-1">
+            {CARACS.map(c => (
+              <div key={c.id} className="text-center">
+                <div className="smallcaps" style={{fontSize:'9px', color:'var(--ink-soft)'}}>{c.id.toUpperCase()}</div>
+                <input
+                  type="number"
+                  value={(state.bonus_caracs||{})[c.id] || 0}
+                  onChange={e => update(s => ({ bonus_caracs: { ...(s.bonus_caracs||{}), [c.id]: Number(e.target.value)||0 } }))}
+                  className="input-dnd w-full text-center font-bold"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type, options }) {
+  if (type === 'select') {
+    return (
+      <div className="mb-2">
+        <label className="block text-xs uppercase ink font-semibold mb-0.5">{label}</label>
+        <select value={value} onChange={e=>onChange(e.target.value)} className="input-dnd w-full">
+          {options.map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-2">
+      <label className="block text-xs uppercase ink font-semibold mb-0.5">{label}</label>
+      <input value={value||''} onChange={e=>onChange(e.target.value)} className="input-dnd w-full" />
+    </div>
+  );
+}
+
+// === CA BLOCK : calcul auto depuis l'équipement (armure + bouclier + DEX + magique) ===
+function computeCA(state) {
+  const armure = ARMURES[state.armure_id || 'aucune'] || ARMURES.aucune;
+  const dexMod = mod(state.caracs.dex);
+  const dexAppliquee = armure.dex_max == null ? dexMod : Math.min(dexMod, armure.dex_max);
+  const bouclier = state.bouclier_equipe ? 2 : 0;
+  const magique = Number(state.ca_bonus_magique) || 0;
+  return {
+    armure,
+    base: armure.ca_base,
+    dex: dexAppliquee,
+    dex_brut: dexMod,
+    dex_max: armure.dex_max,
+    bouclier,
+    magique,
+    total: armure.ca_base + dexAppliquee + bouclier + magique,
+  };
+}
+
+function CABlock({ state, update }) {
+  const calc = computeCA(state);
+  const caEffective = state.auto_ca ? calc.total : (state.ca || 10);
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="carac-shield" style={{padding:'10px 8px'}}>
+          <div className="label">Classe d'armure</div>
+          <div className="modifier" style={{fontSize:'42px'}}>{caEffective}</div>
+          <label className="flex items-center gap-1 justify-center mt-1" style={{fontSize:'10px'}}>
+            <input type="checkbox" checked={!!state.auto_ca} onChange={e=>update({auto_ca: e.target.checked})} style={{width:14, height:14}}/>
+            <span style={{color:'var(--ink-soft)'}} className="smallcaps">Calcul auto</span>
+          </label>
+        </div>
+        <div className="vellum p-2" style={{fontSize:'11px', lineHeight:1.5}}>
+          {state.auto_ca ? (
+            <>
+              <div className="smallcaps cinzel" style={{color:'var(--ink-soft)', fontSize:'9px', marginBottom:4}}>Décomposition</div>
+              <div className="ink">{calc.armure.nom} <strong>{calc.base}</strong></div>
+              <div className="ink">+ DEX {fmt(calc.dex)}{calc.dex_max != null && calc.dex_brut > calc.dex_max ? <span style={{color:'var(--ink-faint)'}}> (plafond +{calc.dex_max})</span> : null}</div>
+              {calc.bouclier > 0 && <div className="ink">+ Bouclier <strong>+2</strong></div>}
+              {calc.magique !== 0 && <div className="ink">+ Magique {fmt(calc.magique)}</div>}
+              <div className="divider" style={{margin:'4px 0'}}></div>
+              <div className="ink"><strong>= {calc.total}</strong></div>
+            </>
+          ) : (
+            <>
+              <div className="smallcaps cinzel" style={{color:'var(--ink-soft)', fontSize:'9px', marginBottom:4}}>CA manuelle</div>
+              <input
+                type="number"
+                value={state.ca}
+                onChange={e=>update({ca:Number(e.target.value)||10})}
+                className="input-dnd w-full text-center font-bold"
+                style={{fontSize:'18px'}}
+              />
+            </>
+          )}
+        </div>
+      </div>
+      {state.auto_ca && (
+        <div className="vellum p-2 mt-2 grid grid-cols-2 gap-2 items-end">
+          <div>
+            <div className="smallcaps" style={{color:'var(--ink-soft)', fontSize:'9px'}}>Armure équipée</div>
+            <select value={state.armure_id || 'aucune'} onChange={e=>update({armure_id: e.target.value})} className="input-dnd w-full">
+              {Object.entries(ARMURES).map(([k, v]) => (
+                <option key={k} value={k}>{v.nom} ({v.type}, CA {v.ca_base}{v.dex_max!=null?`+DEX≤${v.dex_max}`:'+DEX'})</option>
+              ))}
+            </select>
+            {calc.armure.str_min > 0 && state.caracs.for < calc.armure.str_min && (
+              <div className="blood text-xs mt-1">⚠ FOR ≥ {calc.armure.str_min} requise (vous avez {state.caracs.for}) — vitesse −3m</div>
+            )}
+            {calc.armure.furtivite_dis && (
+              <div className="text-xs mt-1" style={{color:'var(--ink-faint)'}}>⚠ Désavantage en Discrétion</div>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={!!state.bouclier_equipe} onChange={e=>update({bouclier_equipe: e.target.checked})} />
+              <span className="ink text-sm">Bouclier équipé (+2)</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="ink text-sm whitespace-nowrap">Bonus magique :</span>
+              <input
+                type="number"
+                value={state.ca_bonus_magique||0}
+                onChange={e=>update({ca_bonus_magique: Number(e.target.value)||0})}
+                className="input-dnd w-14 text-center"
+                title="Cape de protection, anneau, bouclier +X, etc."
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FieldNum({ label, value, onChange, suffix, readonly }) {
+  return (
+    <div className="stat-box rounded-lg p-2 text-center">
+      <div className="text-xs uppercase ink font-semibold">{label}</div>
+      <div className="flex items-center justify-center gap-1">
+        {readonly ? (
+          <div className="text-xl font-bold ink">{fmt(value)}</div>
+        ) : (
+          <input
+            type="number"
+            value={value}
+            onChange={e=>onChange(Number(e.target.value)||0)}
+            className="input-dnd w-16 text-center text-lg font-bold"
+          />
+        )}
+        {suffix && <span className="text-xs ink">{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function FieldArea({ label, value, onChange }) {
+  return (
+    <div className="mb-2">
+      <label className="block text-xs uppercase ink font-semibold mb-0.5">{label}</label>
+      <textarea value={value||''} onChange={e=>onChange(e.target.value)} className="input-dnd w-full text-sm" rows={2} />
+    </div>
+  );
+}
+
+// ============================================================
+// TRACKER — temps réel : PV, dés vie, slots, états
+// ============================================================
+function Tracker({ state, update, classe, prof }) {
+  const [degats, setDegats] = useState(0);
+  const [soin, setSoin] = useState(0);
+  const [tempInput, setTempInput] = useState(0);
+
+  const slotsMax = useMemo(() => {
+    if (classe.progression === 'complete') return SLOTS_FULL[state.niveau] || [0,0,0,0,0,0,0,0,0];
+    if (classe.progression === 'demi') {
+      const s = SLOTS_HALF[state.niveau] || [0,0,0,0,0];
+      return [...s, 0,0,0,0].slice(0,9);
+    }
+    if (classe.progression === 'pacte') {
+      const p = PACT_SLOTS[state.niveau] || {slots:0, niv:0};
+      const arr = [0,0,0,0,0,0,0,0,0];
+      if (p.niv > 0) arr[p.niv-1] = p.slots;
+      return arr;
+    }
+    return [0,0,0,0,0,0,0,0,0];
+  }, [classe.progression, state.niveau]);
+
+  const appliquerDegats = () => {
+    const d = Number(degats)||0;
+    if (d <= 0) return;
+    let temp = state.pv_temp || 0;
+    let pv = state.pv_actuels;
+    let restant = d;
+    if (temp > 0) {
+      const abs = Math.min(temp, restant);
+      temp -= abs; restant -= abs;
+    }
+    pv -= restant;
+    update({ pv_actuels: pv, pv_temp: temp });
+    setDegats(0);
+  };
+  const appliquerSoin = () => {
+    const s = Number(soin)||0;
+    if (s <= 0) return;
+    update({ pv_actuels: Math.min(state.pv_max, state.pv_actuels + s) });
+    setSoin(0);
+  };
+  const setTemp = () => {
+    const t = Number(tempInput)||0;
+    update({ pv_temp: Math.max(state.pv_temp||0, t) });
+    setTempInput(0);
+  };
+
+  const reposCourt = () => {
+    if (!confirm('Effectuer un repos court ? (récupère charges "court" et permet de dépenser des dés de vie)')) return;
+    update(s => ({
+      capacites: (s.capacites||[]).map(c => c.recovery === 'court' ? {...c, charges_used: 0} : c),
+      pact_slots_used: 0, // pacte récupère au repos court
+    }));
+  };
+  const reposLong = () => {
+    if (!confirm('Effectuer un repos long ? Récupère tous les PV, slots, charges (long), et la moitié des dés de vie utilisés.')) return;
+    update(s => ({
+      pv_actuels: s.pv_max,
+      pv_temp: 0,
+      slots_used: [0,0,0,0,0,0,0,0,0],
+      pact_slots_used: 0,
+      des_vie_utilises: Math.max(0, s.des_vie_utilises - Math.max(1, Math.floor(s.des_vie_total/2))),
+      death_saves: { success: 0, failure: 0 },
+      capacites: (s.capacites||[]).map(c => (c.recovery === 'court' || c.recovery === 'long') ? {...c, charges_used: 0} : c),
+    }));
+  };
+
+  const utiliserSlot = (niv, delta) => {
+    update(s => {
+      const used = [...s.slots_used];
+      used[niv-1] = Math.max(0, Math.min(slotsMax[niv-1], used[niv-1] + delta));
+      return { slots_used: used };
+    });
+  };
+
+  const depenserDeVie = () => {
+    if (state.des_vie_utilises >= state.des_vie_total) { alert('Plus de dés de vie disponibles.'); return; }
+    const r = roll(`1d${classe.dv}`);
+    const total = r.total + mod(state.caracs.con);
+    update(s => ({
+      des_vie_utilises: s.des_vie_utilises + 1,
+      pv_actuels: Math.min(s.pv_max, s.pv_actuels + total),
+    }));
+    alert(`Dé de vie : ${r.detail} + CON(${fmt(mod(state.caracs.con))}) = ${total} PV récupérés`);
+  };
+
+  const toggleEtat = (etat) => {
+    update(s => {
+      const has = (s.etats||[]).find(e => e.id === etat.id);
+      return { etats: has
+        ? (s.etats||[]).filter(e => e.id !== etat.id)
+        : [...(s.etats||[]), { id: etat.id, niveau: 1 }] };
+    });
+  };
+
+  const setEpuisement = (n) => {
+    update(s => {
+      const others = (s.etats||[]).filter(e => e.id !== 'epuisement');
+      return { etats: n > 0 ? [...others, { id: 'epuisement', niveau: n }] : others };
+    });
+  };
+
+  const epuisement = (state.etats||[]).find(e => e.id === 'epuisement');
+  const pvPct = Math.max(0, Math.min(100, (state.pv_actuels/state.pv_max)*100));
+  const pvColor = pvPct > 50 ? 'bg-green-600' : pvPct > 25 ? 'bg-yellow-600' : 'bg-red-700';
+
+  const pactInfo = classe.progression === 'pacte' ? PACT_SLOTS[state.niveau] : null;
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-4">
+      {/* Bloc PV */}
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">Points de vie</h3>
+        <div className="text-center my-3">
+          <div className="text-5xl font-bold ink">{state.pv_actuels} <span className="text-2xl">/ {state.pv_max}</span></div>
+          {state.pv_temp > 0 && <div className="text-blue-700 font-semibold">+{state.pv_temp} PV temporaires</div>}
+        </div>
+        <div className="w-full bg-amber-900/20 rounded-full h-4 overflow-hidden mb-3">
+          <div className={`${pvColor} h-full transition-all`} style={{width: `${pvPct}%`}}></div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="text-xs ink font-semibold">Dégâts subis</label>
+            <div className="flex gap-1">
+              <input type="number" value={degats} onChange={e=>setDegats(e.target.value)} className="input-dnd w-full" />
+              <button className="dnd-btn dnd-btn-danger rounded px-2 text-sm" onClick={appliquerDegats}>−</button>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs ink font-semibold">Soins reçus</label>
+            <div className="flex gap-1">
+              <input type="number" value={soin} onChange={e=>setSoin(e.target.value)} className="input-dnd w-full" />
+              <button className="dnd-btn rounded px-2 text-sm" onClick={appliquerSoin}>+</button>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs ink font-semibold">PV Temp</label>
+            <div className="flex gap-1">
+              <input type="number" value={tempInput} onChange={e=>setTempInput(e.target.value)} className="input-dnd w-full" />
+              <button className="dnd-btn rounded px-2 text-sm" onClick={setTemp}>=</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Death Saves */}
+        {state.pv_actuels <= 0 && (
+          <div className="mt-3 p-2 bg-red-900/20 rounded">
+            <div className="text-sm font-bold blood mb-1">Jets contre la mort</div>
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-xs ink">Succès :</span>
+                {[0,1,2].map(i => (
+                  <button key={i} className={`death-pip success ${i<state.death_saves.success?'':'opacity-30'}`}
+                    onClick={()=>update(s=>({death_saves:{...s.death_saves, success: i<s.death_saves.success ? i : i+1}}))}
+                    style={{display:'inline-block', marginLeft:4}} />
+                ))}
+              </div>
+              <div>
+                <span className="text-xs ink">Échecs :</span>
+                {[0,1,2].map(i => (
+                  <button key={i} className={`death-pip failure ${i<state.death_saves.failure?'':'opacity-30'}`}
+                    onClick={()=>update(s=>({death_saves:{...s.death_saves, failure: i<s.death_saves.failure ? i : i+1}}))}
+                    style={{display:'inline-block', marginLeft:4}} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dés de vie */}
+        <div className="mt-3 stat-box rounded p-2">
+          <div className="text-xs ink font-semibold mb-1">Dés de vie ({state.des_vie_total - state.des_vie_utilises}/{state.des_vie_total} d{classe.dv})</div>
+          <div className="flex gap-2 items-center">
+            <button className="dnd-btn rounded px-3 py-1 text-sm" onClick={depenserDeVie}>Dépenser un dé</button>
+            <button className="dnd-btn rounded px-2 py-1 text-xs" onClick={()=>update(s=>({des_vie_utilises: Math.max(0, s.des_vie_utilises-1)}))}>+1 dé</button>
+            <button className="dnd-btn rounded px-2 py-1 text-xs" onClick={()=>update(s=>({des_vie_utilises: Math.min(s.des_vie_total, s.des_vie_utilises+1)}))}>−1 dé</button>
+          </div>
+        </div>
+
+        {/* Repos */}
+        <div className="mt-3 flex gap-2">
+          <button className="dnd-btn rounded-lg px-3 py-2 flex-1" onClick={reposCourt}>☕ Repos court (1h)</button>
+          <button className="dnd-btn rounded-lg px-3 py-2 flex-1" onClick={reposLong}>🌙 Repos long (8h)</button>
+        </div>
+      </div>
+
+      {/* Slots de sorts */}
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">Emplacements de sorts</h3>
+        {pactInfo ? (
+          <div className="stat-box rounded p-3 mb-2">
+            <div className="text-sm ink font-semibold">Pacte (Occultiste) — Niveau {pactInfo.niv} · {pactInfo.slots} slots</div>
+            <div className="flex gap-2 mt-2">
+              {Array.from({length: pactInfo.slots}).map((_,i) => (
+                <button key={i}
+                  className={`slot-pip ${i < state.pact_slots_used ? 'used' : ''}`}
+                  onClick={()=>update(s=>({pact_slots_used: i < s.pact_slots_used ? i : i+1}))}
+                />
+              ))}
+              <button className="dnd-btn rounded px-2 py-0.5 text-xs ml-auto" onClick={()=>update({pact_slots_used:0})}>Restaurer</button>
+            </div>
+            <div className="text-xs ink mt-1 italic">Récupération : repos court</div>
+          </div>
+        ) : null}
+        {slotsMax.map((max, idx) => {
+          if (max === 0) return null;
+          const niv = idx + 1;
+          const used = state.slots_used[idx];
+          return (
+            <div key={niv} className="stat-box rounded p-2 mb-1.5">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold ink">Niveau {niv}</div>
+                <div className="flex gap-1 items-center">
+                  {Array.from({length: max}).map((_,i) => (
+                    <button key={i}
+                      className={`slot-pip ${i < used ? 'used' : ''}`}
+                      onClick={()=>{
+                        update(s => {
+                          const arr = [...s.slots_used];
+                          arr[idx] = i < arr[idx] ? i : i+1;
+                          return { slots_used: arr };
+                        });
+                      }}
+                    />
+                  ))}
+                  <span className="text-xs ink ml-2">{max-used}/{max}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {slotsMax.every(s=>s===0) && !pactInfo && <div className="ink italic">Cette classe n'utilise pas d'emplacements de sorts.</div>}
+      </div>
+
+      {/* États */}
+      <div className="parchment rounded-xl p-4 lg:col-span-2">
+        <h3 className="section-title">États</h3>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {ETATS.filter(e=>e.id!=='epuisement').map(e => {
+            const actif = (state.etats||[]).find(x => x.id === e.id);
+            return (
+              <div key={e.id}
+                className={`stat-box rounded p-2 cursor-pointer transition-all ${actif?'ring-2 ring-red-700 bg-red-900/20':''}`}
+                onClick={()=>toggleEtat(e)}
+                title={e.desc}
+              >
+                <div className="font-semibold ink text-sm">{e.nom}</div>
+                <div className="text-xs ink/80 truncate">{e.desc.slice(0,60)}…</div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Épuisement */}
+        <div className="stat-box rounded p-2 mt-2">
+          <div className="font-semibold ink text-sm">Épuisement (0–6) — actuel : {epuisement?.niveau || 0}</div>
+          <div className="flex gap-1 mt-1">
+            {[0,1,2,3,4,5,6].map(n => (
+              <button key={n}
+                onClick={()=>setEpuisement(n)}
+                className={`px-3 py-1 rounded ${(epuisement?.niveau||0) === n ? 'dnd-btn dnd-btn-danger' : 'dnd-btn'}`}
+              >{n}</button>
+            ))}
+          </div>
+          {epuisement && epuisement.niveau > 0 && (
+            <div className="text-xs ink italic mt-1">
+              Pénalité de −{epuisement.niveau*2} aux jets de d20 et CD. {epuisement.niveau >= 6 ? '⚠️ MORT.' : ''}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// SORTS — gestion préparés & casting
+// ============================================================
+function Sorts({ state, update, classe, prof, sortsDB, caracSort }) {
+  const [filtre, setFiltre] = useState({ niveau: 'tous', ecole: 'tous', q: '', classe: 'mes' });
+  const [showAdd, setShowAdd] = useState(false);
+
+  const caracMod = caracSort ? mod(state.caracs[caracSort]) : 0;
+  const ddSorts = state.dd_sorts || (8 + prof + caracMod);
+  const bonusAtt = state.bonus_attaque_sort || (prof + caracMod);
+  const aPreparer = state.sorts_a_preparer || (state.niveau + caracMod);
+
+  const codeClasse = useMemo(() => {
+    const m = { barde:'B', clerc:'C', druide:'D', ensorceleur:'E', magicien:'M', paladin:'P', rodeur:'R', occultiste:'O' };
+    return m[state.classe] || '';
+  }, [state.classe]);
+
+  const sortsConnusIds = (state.sorts_connus||[]).map(s => s.id);
+  const sortsConnusObjs = sortsConnusIds.map(id => sortsDB.find(s => s.id === id)).filter(Boolean);
+
+  const slotsMax = useMemo(() => {
+    if (classe.progression === 'complete') return SLOTS_FULL[state.niveau] || [];
+    if (classe.progression === 'demi') return [...(SLOTS_HALF[state.niveau]||[]), 0,0,0,0].slice(0,9);
+    if (classe.progression === 'pacte') {
+      const p = PACT_SLOTS[state.niveau] || {slots:0, niv:0};
+      const arr = [0,0,0,0,0,0,0,0,0];
+      if (p.niv > 0) arr[p.niv-1] = p.slots;
+      return arr;
+    }
+    return [];
+  }, [classe.progression, state.niveau]);
+
+  const sortsFiltres = useMemo(() => {
+    let s = filtre.classe === 'mes' ? sortsConnusObjs : sortsDB;
+    if (filtre.niveau !== 'tous') s = s.filter(x => x.niveau === Number(filtre.niveau));
+    if (filtre.ecole !== 'tous') s = s.filter(x => x.ecole === filtre.ecole);
+    if (filtre.classe !== 'mes' && filtre.classe !== 'tous') s = s.filter(x => (x.classes||[]).includes(filtre.classe));
+    if (filtre.q) {
+      const q = filtre.q.toLowerCase();
+      s = s.filter(x => x.nom.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
+    }
+    return s.sort((a,b) => a.niveau - b.niveau || a.nom.localeCompare(b.nom));
+  }, [filtre, sortsConnusObjs, sortsDB]);
+
+  const ajouter = (sort) => {
+    if (sortsConnusIds.includes(sort.id)) return;
+    update(s => ({
+      sorts_connus: [...(s.sorts_connus||[]), { id: sort.id, prepare: false, cantrip: sort.niveau === 0 }]
+    }));
+  };
+  const retirer = (id) => {
+    update(s => ({ sorts_connus: (s.sorts_connus||[]).filter(x => x.id !== id) }));
+  };
+  const togglePrepare = (id) => {
+    update(s => ({
+      sorts_connus: (s.sorts_connus||[]).map(x => x.id === id ? {...x, prepare: !x.prepare} : x)
+    }));
+  };
+
+  const lancerSort = (sort) => {
+    if (sort.niveau === 0) {
+      alert(`✨ ${sort.nom} (cantrip) lancé.`);
+      return;
+    }
+    // Demande à quel niveau lancer (si emplacement supérieur dispo)
+    const minNiv = sort.niveau;
+    const dispo = [];
+    for (let n = minNiv; n <= 9; n++) {
+      const restant = (slotsMax[n-1]||0) - (state.slots_used[n-1]||0);
+      if (restant > 0) dispo.push({niv:n, restant});
+    }
+    if (dispo.length === 0) {
+      // pacte ?
+      if (classe.progression === 'pacte') {
+        const p = PACT_SLOTS[state.niveau];
+        if (p && p.niv >= minNiv && state.pact_slots_used < p.slots) {
+          if (confirm(`Lancer ${sort.nom} avec un emplacement de pacte (niveau ${p.niv}) ?`)) {
+            update(s => ({ pact_slots_used: s.pact_slots_used + 1 }));
+            alert(`✨ ${sort.nom} lancé (slot pacte niv ${p.niv}).`);
+          }
+          return;
+        }
+      }
+      alert('Aucun emplacement disponible pour lancer ce sort.');
+      return;
+    }
+    let niv = minNiv;
+    if (dispo.length > 1) {
+      const choix = prompt(`Lancer ${sort.nom} (niveau de base : ${minNiv}) à quel niveau d'emplacement ?\n${dispo.map(d=>`${d.niv} (${d.restant} restants)`).join('\n')}`, String(minNiv));
+      niv = Number(choix) || minNiv;
+      if (!dispo.find(d=>d.niv===niv)) { alert('Niveau invalide.'); return; }
+    }
+    update(s => {
+      const arr = [...s.slots_used];
+      arr[niv-1] = (arr[niv-1]||0) + 1;
+      return { slots_used: arr };
+    });
+    alert(`✨ ${sort.nom} lancé (slot niv ${niv}).`);
+  };
+
+  const prepares = sortsConnusObjs.filter(s => {
+    const meta = (state.sorts_connus||[]).find(x => x.id === s.id);
+    return meta && (meta.prepare || meta.domaine);
+  });
+  const prepCount = prepares.filter(s => {
+    const meta = (state.sorts_connus||[]).find(x => x.id === s.id);
+    return meta && !meta.domaine && !meta.cantrip;
+  }).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="parchment rounded-xl p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+          <div className="stat-box rounded p-2 text-center">
+            <div className="text-xs ink font-semibold">Carac</div>
+            <div className="text-xl font-bold ink">{caracSort?caracSort.toUpperCase():'—'}</div>
+          </div>
+          <div className="stat-box rounded p-2 text-center">
+            <div className="text-xs ink font-semibold">DD Sorts</div>
+            <div className="text-xl font-bold ink">{ddSorts}</div>
+          </div>
+          <div className="stat-box rounded p-2 text-center">
+            <div className="text-xs ink font-semibold">Att. magique</div>
+            <div className="text-xl font-bold ink">{fmt(bonusAtt)}</div>
+          </div>
+          <div className="stat-box rounded p-2 text-center">
+            <div className="text-xs ink font-semibold">À préparer</div>
+            <div className="text-xl font-bold ink">{prepCount}/{aPreparer}</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <select value={filtre.classe} onChange={e=>setFiltre({...filtre, classe:e.target.value})} className="input-dnd">
+            <option value="mes">Mes sorts ({sortsConnusObjs.length})</option>
+            <option value="tous">Tous (DB)</option>
+            <option value="B">Barde</option><option value="C">Clerc</option>
+            <option value="D">Druide</option><option value="E">Ensorceleur</option>
+            <option value="M">Magicien</option><option value="P">Paladin</option>
+            <option value="R">Rôdeur</option><option value="O">Occultiste</option>
+          </select>
+          <select value={filtre.niveau} onChange={e=>setFiltre({...filtre, niveau:e.target.value})} className="input-dnd">
+            <option value="tous">Tous niveaux</option>
+            {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n===0?'Cantrip':`Niv ${n}`}</option>)}
+          </select>
+          <select value={filtre.ecole} onChange={e=>setFiltre({...filtre, ecole:e.target.value})} className="input-dnd">
+            <option value="tous">Toutes écoles</option>
+            {['Abjuration','Divination','Évocation','Enchantement','Illusion','Invocation','Nécromancie','Transmutation'].map(e=><option key={e} value={e}>{e}</option>)}
+          </select>
+          <input value={filtre.q} onChange={e=>setFiltre({...filtre, q:e.target.value})} placeholder="Recherche…" className="input-dnd flex-1 min-w-[150px]" />
+        </div>
+      </div>
+
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">
+          {filtre.classe === 'mes' ? `Mes sorts (${sortsFiltres.length})` : `Bibliothèque (${sortsFiltres.length})`}
+        </h3>
+        <div className="space-y-2 max-h-[600px] overflow-y-auto scroll-thin">
+          {sortsFiltres.length === 0 && <div className="ink italic">Aucun sort trouvé. Change la classe filtrée pour ajouter à la volée depuis la bibliothèque.</div>}
+          {sortsFiltres.map(sort => {
+            const dansLeur = sortsConnusIds.includes(sort.id);
+            const meta = (state.sorts_connus||[]).find(x => x.id === sort.id);
+            const prepare = meta && (meta.prepare || meta.domaine);
+            return (
+              <SortCard key={sort.id} sort={sort}
+                dansLeur={dansLeur}
+                meta={meta}
+                onAjouter={()=>ajouter(sort)}
+                onRetirer={()=>retirer(sort.id)}
+                onTogglePrepare={()=>togglePrepare(sort.id)}
+                onLancer={()=>lancerSort(sort)}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortCard({ sort, dansLeur, meta, onAjouter, onRetirer, onTogglePrepare, onLancer }) {
+  const [open, setOpen] = useState(false);
+  const niv = sort.niveau === 0 ? 'Cantrip' : `Niv ${sort.niveau}`;
+  return (
+    <div className={`stat-box rounded p-2 ${meta?.prepare||meta?.domaine?'ring-1 ring-amber-700':''}`}>
+      <div className="flex items-start gap-2">
+        <button onClick={()=>setOpen(o=>!o)} className="text-left flex-1">
+          <div className="font-semibold ink">{sort.nom} <span className="text-xs gold ml-1">{niv} · {sort.ecole}</span></div>
+          <div className="text-xs ink/80">{sort.temps} · {sort.portee} · {sort.duree}{sort.conc?' (C)':''}{sort.ritu?' (R)':''}</div>
+        </button>
+        <div className="flex gap-1">
+          {dansLeur && sort.niveau > 0 && !meta?.domaine && (
+            <button
+              onClick={onTogglePrepare}
+              className={`px-2 py-1 rounded text-xs ${meta?.prepare?'dnd-btn':'tab-btn'}`}
+              title={meta?.prepare?'Préparé':'Non préparé'}
+            >{meta?.prepare?'★':'☆'}</button>
+          )}
+          {meta?.domaine && <span className="px-2 py-1 text-xs gold" title="Sort de domaine — toujours préparé">⚜</span>}
+          {dansLeur && (
+            <button onClick={onLancer} className="dnd-btn rounded px-2 py-1 text-xs" title="Lancer le sort (consomme un slot)">🎯</button>
+          )}
+          {dansLeur ? (
+            <button onClick={onRetirer} className="dnd-btn dnd-btn-danger rounded px-2 py-1 text-xs">−</button>
+          ) : (
+            <button onClick={onAjouter} className="dnd-btn rounded px-2 py-1 text-xs">+</button>
+          )}
+        </div>
+      </div>
+      {open && (
+        <div className="mt-2 pt-2 border-t border-amber-700/30 text-sm ink">
+          <div><strong>Composantes :</strong> {sort.comp}</div>
+          <div className="mt-1 whitespace-pre-line">{sort.desc}</div>
+          {sort.classes && <div className="mt-1 text-xs gold">Classes : {sort.classes.join(', ')}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// INVENTAIRE & MONNAIE
+// ============================================================
+function Inventaire({ state, update, prof }) {
+  const [nouveau, setNouveau] = useState({ nom:'', qte:1, poids:0, desc:'' });
+  const [nouvArme, setNouvArme] = useState({ nom:'', bonus:'+0', degats:'1d6', type:'tranchant', portee:'CàC', props:'', carac:'for' });
+
+  const ajouterItem = () => {
+    if (!nouveau.nom) return;
+    update(s => ({
+      inventaire: [...(s.inventaire||[]), {...nouveau, id:'i'+Date.now(), qte:Number(nouveau.qte)||1, poids:Number(nouveau.poids)||0}]
+    }));
+    setNouveau({ nom:'', qte:1, poids:0, desc:'' });
+  };
+  const updateItem = (id, patch) => {
+    update(s => ({ inventaire: (s.inventaire||[]).map(i => i.id===id ? {...i, ...patch} : i) }));
+  };
+  const supprItem = (id) => update(s => ({ inventaire: (s.inventaire||[]).filter(i => i.id!==id) }));
+
+  const ajouterArme = () => {
+    if (!nouvArme.nom) return;
+    update(s => ({ armes: [...(s.armes||[]), {...nouvArme, id:'a'+Date.now()}] }));
+    setNouvArme({ nom:'', bonus:'+0', degats:'1d6', type:'tranchant', portee:'CàC', props:'', carac:'for' });
+  };
+  const updateArme = (id, patch) => {
+    update(s => ({ armes: (s.armes||[]).map(a => a.id===id ? {...a, ...patch} : a) }));
+  };
+  const supprArme = (id) => update(s => ({ armes: (s.armes||[]).filter(a => a.id!==id) }));
+
+  const poidsTotal = (state.inventaire||[]).reduce((t,i) => t + (i.poids||0)*(i.qte||1), 0).toFixed(1);
+  const portMax = state.caracs.for * 7.5; // kg max (D&D : FOR×15 livres ≈ ×6.8kg, mais on garde simple)
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-4">
+      {/* Monnaie */}
+      <div className="parchment rounded-xl p-4 lg:col-span-2">
+        <h3 className="section-title">Bourse</h3>
+        <div className="grid grid-cols-5 gap-2">
+          {[
+            ['cuivre','PC','Cuivre'],
+            ['argent','PA','Argent'],
+            ['electrum','PE','Electrum'],
+            ['or','PO','Or'],
+            ['platine','PP','Platine'],
+          ].map(([k,abrv,lbl]) => (
+            <div key={k} className="stat-box rounded p-2 text-center">
+              <div className="text-xs ink">{lbl}</div>
+              <input type="number" value={state[k]||0} onChange={e=>update({[k]: Number(e.target.value)||0})}
+                className="input-dnd w-full text-center font-bold" />
+              <div className="text-xs gold">{abrv}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 text-xs ink">
+          Total approximatif : <strong>{(state.cuivre/100 + state.argent/10 + state.electrum/2 + state.or + state.platine*10).toFixed(2)} po</strong>
+        </div>
+      </div>
+
+      {/* Armes */}
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">Armes</h3>
+        <div className="space-y-2 max-h-96 overflow-y-auto scroll-thin mb-2">
+          {(state.armes||[]).map(a => (
+            <div key={a.id} className="stat-box rounded p-2">
+              <div className="flex items-center justify-between gap-2">
+                <input value={a.nom} onChange={e=>updateArme(a.id,{nom:e.target.value})} className="input-dnd flex-1 font-semibold" />
+                <button onClick={()=>supprArme(a.id)} className="dnd-btn dnd-btn-danger rounded px-2 py-1 text-xs">×</button>
+              </div>
+              <div className="grid grid-cols-3 gap-1 mt-1 text-xs">
+                <input value={a.bonus} onChange={e=>updateArme(a.id,{bonus:e.target.value})} className="input-dnd" placeholder="ATT" />
+                <input value={a.degats} onChange={e=>updateArme(a.id,{degats:e.target.value})} className="input-dnd" placeholder="Dégâts" />
+                <input value={a.type} onChange={e=>updateArme(a.id,{type:e.target.value})} className="input-dnd" placeholder="Type" />
+                <input value={a.portee} onChange={e=>updateArme(a.id,{portee:e.target.value})} className="input-dnd" placeholder="Portée" />
+                <input value={a.props||''} onChange={e=>updateArme(a.id,{props:e.target.value})} className="input-dnd col-span-2" placeholder="Propriétés" />
+              </div>
+              <div className="mt-1 flex gap-1">
+                <button onClick={()=>{
+                  const r = roll('1d20');
+                  const b = parseInt(a.bonus)||0;
+                  alert(`🎯 ${a.nom} attaque : d20=${r.detail} ${fmt(b)} = ${r.total + b}`);
+                }} className="dnd-btn rounded px-2 py-0.5 text-xs flex-1">Attaque</button>
+                <button onClick={()=>{
+                  const r = roll(a.degats);
+                  alert(`💥 ${a.nom} dégâts (${a.degats}) : ${r.detail} = ${r.total} ${a.type}`);
+                }} className="dnd-btn rounded px-2 py-0.5 text-xs flex-1">Dégâts</button>
+                <button onClick={()=>{
+                  const r = roll(a.degats, true); // crit
+                  alert(`💥💥 CRITIQUE ${a.nom} (${a.degats} ×2 dés) : ${r.detail} = ${r.total} ${a.type}`);
+                }} className="dnd-btn dnd-btn-danger rounded px-2 py-0.5 text-xs flex-1">Crit.</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <details>
+          <summary className="text-sm ink font-semibold cursor-pointer hover:underline">+ Ajouter une arme</summary>
+          <div className="grid grid-cols-2 gap-1 mt-1">
+            <input placeholder="Nom" value={nouvArme.nom} onChange={e=>setNouvArme({...nouvArme,nom:e.target.value})} className="input-dnd col-span-2" />
+            <input placeholder="ATT (+5)" value={nouvArme.bonus} onChange={e=>setNouvArme({...nouvArme,bonus:e.target.value})} className="input-dnd" />
+            <input placeholder="Dégâts (1d8+3)" value={nouvArme.degats} onChange={e=>setNouvArme({...nouvArme,degats:e.target.value})} className="input-dnd" />
+            <input placeholder="Type" value={nouvArme.type} onChange={e=>setNouvArme({...nouvArme,type:e.target.value})} className="input-dnd" />
+            <input placeholder="Portée" value={nouvArme.portee} onChange={e=>setNouvArme({...nouvArme,portee:e.target.value})} className="input-dnd" />
+            <input placeholder="Propriétés" value={nouvArme.props} onChange={e=>setNouvArme({...nouvArme,props:e.target.value})} className="input-dnd col-span-2" />
+            <button onClick={ajouterArme} className="dnd-btn rounded px-2 py-1 col-span-2">Ajouter</button>
+          </div>
+        </details>
+      </div>
+
+      {/* Items */}
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">
+          Équipement <span className="text-xs gold ml-2">{poidsTotal} kg</span>
+        </h3>
+        <div className="space-y-1 max-h-96 overflow-y-auto scroll-thin mb-2">
+          {(state.inventaire||[]).map(i => (
+            <div key={i.id} className="flex items-center gap-1 stat-box rounded p-1">
+              <input type="number" value={i.qte} onChange={e=>updateItem(i.id,{qte:Number(e.target.value)||0})} className="input-dnd w-12 text-center" />
+              <input value={i.nom} onChange={e=>updateItem(i.id,{nom:e.target.value})} className="input-dnd flex-1" />
+              <input value={i.poids||0} onChange={e=>updateItem(i.id,{poids:Number(e.target.value)||0})} className="input-dnd w-14 text-xs" placeholder="kg" />
+              <button onClick={()=>supprItem(i.id)} className="dnd-btn dnd-btn-danger rounded px-2 py-0.5 text-xs">×</button>
+            </div>
+          ))}
+        </div>
+        <details>
+          <summary className="text-sm ink font-semibold cursor-pointer hover:underline">+ Ajouter un objet</summary>
+          <div className="grid grid-cols-2 gap-1 mt-1">
+            <input placeholder="Nom" value={nouveau.nom} onChange={e=>setNouveau({...nouveau,nom:e.target.value})} className="input-dnd col-span-2" />
+            <input placeholder="Qté" type="number" value={nouveau.qte} onChange={e=>setNouveau({...nouveau,qte:e.target.value})} className="input-dnd" />
+            <input placeholder="Poids (kg)" type="number" value={nouveau.poids} onChange={e=>setNouveau({...nouveau,poids:e.target.value})} className="input-dnd" />
+            <input placeholder="Description" value={nouveau.desc} onChange={e=>setNouveau({...nouveau,desc:e.target.value})} className="input-dnd col-span-2" />
+            <button onClick={ajouterItem} className="dnd-btn rounded px-2 py-1 col-span-2">Ajouter</button>
+          </div>
+        </details>
+      </div>
+
+      {/* Maîtrises */}
+      <div className="parchment rounded-xl p-4 lg:col-span-2">
+        <h3 className="section-title">Maîtrises & Langues</h3>
+        <div className="grid md:grid-cols-2 gap-2">
+          <FieldArea label="Armes" value={state.maitrises_armes} onChange={v=>update({maitrises_armes:v})} />
+          <FieldArea label="Armures" value={state.maitrises_armures} onChange={v=>update({maitrises_armures:v})} />
+          <FieldArea label="Outils" value={state.maitrises_outils} onChange={v=>update({maitrises_outils:v})} />
+          <FieldArea label="Langues" value={state.langues} onChange={v=>update({langues:v})} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Dice roller — supporte 2d6+3, 1d20-1, etc. (et critiques)
+// (utilisé par : level-up, dépense de dé de vie, attaques d'armes dans l'inventaire)
+function roll(formule, crit=false) {
+  const m = String(formule).replace(/\s/g,'').match(/^(\d+)d(\d+)([+-]\d+)?$/i);
+  if (!m) {
+    const n = Number(formule);
+    if (!isNaN(n)) return { total:n, detail:String(n) };
+    return { total:0, detail:'?' };
+  }
+  let n = Number(m[1]);
+  const sides = Number(m[2]);
+  const bonus = m[3] ? Number(m[3]) : 0;
+  if (crit) n *= 2;
+  const dice = [];
+  for (let i = 0; i < n; i++) dice.push(1 + Math.floor(Math.random()*sides));
+  const sum = dice.reduce((t,v)=>t+v, 0);
+  const detail = `[${dice.join(',')}]${bonus?(bonus>=0?`+${bonus}`:bonus):''}`;
+  return { total: sum + bonus, detail };
+}
+
+// ============================================================
+// LEVEL UP — wizard de passage de niveau
+// ============================================================
+function LevelUp({ state, update, classe }) {
+  const [step, setStep] = useState('intro');
+  const [pvGain, setPvGain] = useState(0);
+
+  const xpProchain = XP_BY_LEVEL[state.niveau + 1] || 999999;
+  const peutMonter = state.xp >= xpProchain || state.niveau < 20; // permettre manuel
+
+  const monterNiveau = () => {
+    const nouveauNiv = state.niveau + 1;
+    if (nouveauNiv > 20) { alert('Niveau maximum atteint.'); return; }
+    setStep('hp');
+  };
+
+  const validerPV = (gain) => {
+    update(s => ({
+      niveau: s.niveau + 1,
+      pv_max: s.pv_max + gain,
+      pv_actuels: s.pv_actuels + gain,
+      des_vie_total: s.des_vie_total + 1,
+      historique_evenements: [...(s.historique_evenements||[]), {
+        type: 'level_up',
+        niveau: s.niveau + 1,
+        date: new Date().toLocaleDateString(),
+        gain_pv: gain,
+      }]
+    }));
+    setStep('done');
+  };
+
+  const aspectsParNiveau = {
+    1: ['Choisir classe et historique', 'Calcul des PV de départ : max DV + CON', 'Maîtrises : armes, armures, sauvegardes, compétences'],
+    2: ['Capacité de classe (varie selon classe)'],
+    3: ['Choix de la sous-classe', 'Capacité de sous-classe niveau 3'],
+    4: ['Augmentation de Caractéristique (ASI) ou Talent', '+1 dé de vie'],
+    5: ['Bonus de maîtrise +3', 'Capacité majeure : Attaque supplémentaire (martiaux), sorts niv 3 (lanceurs complets)…'],
+    6: ['Capacité de classe ou sous-classe'],
+    7: ['Capacité de sous-classe ou classe'],
+    8: ['ASI ou Talent'],
+    9: ['Bonus de maîtrise +4', 'Sorts niveau 5 (lanceurs complets)'],
+    10: ['Capacité de classe'],
+    11: ['Capacité majeure (souvent Attaque sup. 2 pour Guerrier, sorts niv 6, etc.)'],
+    12: ['ASI ou Talent'],
+    13: ['Bonus de maîtrise +5', 'Sorts niveau 7'],
+    14: ['Capacité de sous-classe'],
+    15: ['Sorts niveau 8'],
+    16: ['ASI ou Talent'],
+    17: ['Bonus de maîtrise +6', 'Sorts niveau 9'],
+    18: ['Capacité de classe'],
+    19: ['ASI ou Talent (Épique)'],
+    20: ['Capacité ultime de classe'],
+  };
+
+  const proch = state.niveau + 1;
+
+  return (
+    <div className="parchment rounded-xl p-4 max-w-3xl mx-auto">
+      <h3 className="section-title" style={{fontSize:'16px'}}>🎖️ Passage de niveau</h3>
+
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="stat-box rounded p-2 text-center">
+          <div className="text-xs ink">Niveau actuel</div>
+          <div className="text-2xl font-bold ink">{state.niveau}</div>
+        </div>
+        <div className="stat-box rounded p-2 text-center">
+          <div className="text-xs ink">XP actuels</div>
+          <input type="number" value={state.xp} onChange={e=>update({xp:Number(e.target.value)||0})} className="input-dnd w-full text-center font-bold" />
+        </div>
+        <div className="stat-box rounded p-2 text-center">
+          <div className="text-xs ink">XP requis niv {state.niveau+1}</div>
+          <div className="text-xl font-bold ink">{xpProchain.toLocaleString()}</div>
+        </div>
+      </div>
+
+      {step === 'intro' && (
+        <>
+          <div className="mb-3 ink">
+            <strong>Au niveau {proch}, tu obtiendras :</strong>
+            <ul className="list-disc pl-5 mt-1 space-y-0.5 text-sm">
+              {(aspectsParNiveau[proch] || ['Capacité de classe — consulte le PHB 2024']).map((a,i) => <li key={i}>{a}</li>)}
+              <li>Bonus de maîtrise : <strong>+{PROF_BY_LEVEL[proch]}</strong> (actuel : +{PROF_BY_LEVEL[state.niveau]})</li>
+              <li>+1 dé de vie (d{classe.dv})</li>
+            </ul>
+          </div>
+          <button onClick={monterNiveau} className="dnd-btn rounded-lg px-4 py-2 w-full">
+            Monter au niveau {proch} →
+          </button>
+        </>
+      )}
+
+      {step === 'hp' && (
+        <div>
+          <h4 className="font-bold ink mb-2">Gain de PV au niveau {proch}</h4>
+          <div className="ink mb-3 text-sm">
+            Choisis la méthode de gain de PV. Modificateur de Constitution : <strong>{fmt(mod(state.caracs.con))}</strong>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-2">
+            <button
+              onClick={()=>{
+                const gain = Math.floor(classe.dv/2) + 1 + mod(state.caracs.con);
+                validerPV(gain);
+              }}
+              className="dnd-btn rounded-lg p-3"
+            >
+              <div className="font-bold">Moyen (sûr)</div>
+              <div className="text-xs">⌊d{classe.dv}/2⌋+1 + CON = {Math.floor(classe.dv/2) + 1 + mod(state.caracs.con)} PV</div>
+            </button>
+            <button
+              onClick={()=>{
+                const r = roll(`1d${classe.dv}`);
+                const gain = r.total + mod(state.caracs.con);
+                if (confirm(`Tu as roulé ${r.detail} + CON(${fmt(mod(state.caracs.con))}) = ${gain} PV. Valider ?`)) {
+                  validerPV(gain);
+                }
+              }}
+              className="dnd-btn dnd-btn-danger rounded-lg p-3"
+            >
+              <div className="font-bold">Lancer le dé 🎲</div>
+              <div className="text-xs">d{classe.dv} + CON</div>
+            </button>
+            <div className="stat-box rounded-lg p-3">
+              <div className="text-xs ink mb-1">Manuel</div>
+              <input type="number" value={pvGain} onChange={e=>setPvGain(Number(e.target.value)||0)} className="input-dnd w-full text-center" />
+              <button onClick={()=>validerPV(pvGain)} className="dnd-btn rounded mt-1 w-full text-xs">Valider</button>
+            </div>
+          </div>
+          <button onClick={()=>setStep('intro')} className="text-xs ink mt-3 underline">← Annuler</button>
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className="text-center py-6">
+          <div className="text-3xl mb-2">🎉</div>
+          <div className="text-xl font-bold ink">Niveau {state.niveau} atteint !</div>
+          <div className="ink mt-2 text-sm">N'oublie pas de :</div>
+          <ul className="text-sm ink text-left max-w-md mx-auto mt-1 space-y-1">
+            <li>• Vérifier les nouvelles capacités de ta classe / sous-classe</li>
+            <li>• Mettre à jour tes sorts si lanceur (onglet Sorts)</li>
+            {[4,8,12,16,19].includes(state.niveau) && <li className="font-bold gold">• Choisir une Augmentation de carac (+2 ou +1/+1) ou un Talent !</li>}
+            {[5,11,17].includes(state.niveau) && <li className="font-bold gold">• Bonus de maîtrise augmenté à +{PROF_BY_LEVEL[state.niveau]}</li>}
+            <li>• Ajouter les nouvelles capacités dans l'onglet Capacités</li>
+          </ul>
+          <button onClick={()=>setStep('intro')} className="dnd-btn rounded-lg px-4 py-2 mt-4">Retour</button>
+        </div>
+      )}
+
+      <details className="mt-4">
+        <summary className="text-sm ink font-semibold cursor-pointer">Niveau manuel (descendre / forcer)</summary>
+        <div className="flex gap-2 mt-2">
+          <button onClick={()=>{ if (confirm(`Descendre au niveau ${state.niveau-1} ?`)) update({niveau: Math.max(1, state.niveau-1)}); }} className="dnd-btn dnd-btn-danger rounded px-3 py-1 text-sm">Niveau −1</button>
+          <input type="number" value={state.niveau} onChange={e=>update({niveau: Math.max(1, Math.min(20, Number(e.target.value)||1))})} className="input-dnd w-20 text-center" />
+        </div>
+      </details>
+    </div>
+  );
+}
+
+// ============================================================
+// CAPACITÉS — avec charges et descriptions
+// ============================================================
+function Capacites({ state, update, classe, espece, histo }) {
+  const [edit, setEdit] = useState(null);
+  const [nouvelle, setNouvelle] = useState({ nom:'', source:'', desc:'', charges_max:0, recovery:'long' });
+
+  const utiliser = (id, delta) => {
+    update(s => ({
+      capacites: (s.capacites||[]).map(c => {
+        if (c.id !== id) return c;
+        const nouv = Math.max(0, Math.min(c.charges_max||0, (c.charges_used||0) + delta));
+        return { ...c, charges_used: nouv };
+      })
+    }));
+  };
+
+  const supprimer = (id) => {
+    if (confirm('Supprimer cette capacité ?')) update(s => ({ capacites: (s.capacites||[]).filter(c => c.id !== id) }));
+  };
+
+  const updateCap = (id, patch) => {
+    update(s => ({ capacites: (s.capacites||[]).map(c => c.id === id ? {...c, ...patch} : c) }));
+  };
+
+  const ajouter = () => {
+    if (!nouvelle.nom) return;
+    update(s => ({ capacites: [...(s.capacites||[]), {...nouvelle, id:'c'+Date.now(), charges_used:0, charges_max: Number(nouvelle.charges_max)||0}] }));
+    setNouvelle({ nom:'', source:'', desc:'', charges_max:0, recovery:'long' });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="parchment rounded-xl p-4">
+        <h3 className="section-title">Capacités & Traits</h3>
+        <div className="space-y-2">
+          {(state.capacites||[]).map(c => (
+            <div key={c.id} className="stat-box rounded p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="font-bold ink">{c.nom} <span className="text-xs gold ml-1">{c.source}</span></div>
+                  <div className="text-sm ink mt-1 whitespace-pre-line">{c.desc}</div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {c.charges_max > 0 && (
+                    <div className="flex flex-col items-end">
+                      <div className="flex gap-0.5">
+                        {Array.from({length: c.charges_max}).map((_,i) => (
+                          <button key={i}
+                            className={`slot-pip ${i < (c.charges_used||0) ? 'used' : ''}`}
+                            onClick={()=>utiliser(c.id, i < (c.charges_used||0) ? -((c.charges_used||0)-i) : (i+1) - (c.charges_used||0))}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-xs ink mt-0.5">{c.charges_max - (c.charges_used||0)}/{c.charges_max} · récup. {c.recovery==='court'?'court':c.recovery==='long'?'long':'manuel'}</div>
+                    </div>
+                  )}
+                  <div className="flex gap-1">
+                    <button onClick={()=>setEdit(c.id===edit?null:c.id)} className="dnd-btn rounded px-2 py-0.5 text-xs">✎</button>
+                    <button onClick={()=>supprimer(c.id)} className="dnd-btn dnd-btn-danger rounded px-2 py-0.5 text-xs">×</button>
+                  </div>
+                </div>
+              </div>
+              {edit === c.id && (
+                <div className="mt-2 grid grid-cols-2 gap-1 pt-2 border-t border-amber-700/30">
+                  <input value={c.nom} onChange={e=>updateCap(c.id,{nom:e.target.value})} className="input-dnd col-span-2" placeholder="Nom" />
+                  <input value={c.source} onChange={e=>updateCap(c.id,{source:e.target.value})} className="input-dnd" placeholder="Source" />
+                  <select value={c.recovery||'long'} onChange={e=>updateCap(c.id,{recovery:e.target.value})} className="input-dnd">
+                    <option value="long">Repos long</option>
+                    <option value="court">Repos court</option>
+                    <option value="manuel">Manuel</option>
+                  </select>
+                  <input type="number" value={c.charges_max||0} onChange={e=>updateCap(c.id,{charges_max:Number(e.target.value)||0})} className="input-dnd" placeholder="Charges max" />
+                  <textarea value={c.desc||''} onChange={e=>updateCap(c.id,{desc:e.target.value})} className="input-dnd col-span-2" rows={3} placeholder="Description" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="parchment rounded-xl p-4">
+        <h4 className="font-bold ink mb-2">+ Ajouter une capacité</h4>
+        <div className="grid grid-cols-2 gap-2">
+          <input placeholder="Nom" value={nouvelle.nom} onChange={e=>setNouvelle({...nouvelle,nom:e.target.value})} className="input-dnd col-span-2" />
+          <input placeholder="Source (Classe niv 3, Espèce…)" value={nouvelle.source} onChange={e=>setNouvelle({...nouvelle,source:e.target.value})} className="input-dnd col-span-2" />
+          <input type="number" placeholder="Charges max (0 = illimité)" value={nouvelle.charges_max} onChange={e=>setNouvelle({...nouvelle,charges_max:e.target.value})} className="input-dnd" />
+          <select value={nouvelle.recovery} onChange={e=>setNouvelle({...nouvelle,recovery:e.target.value})} className="input-dnd">
+            <option value="long">Récup. repos long</option>
+            <option value="court">Récup. repos court</option>
+            <option value="manuel">Récup. manuelle</option>
+          </select>
+          <textarea placeholder="Description" value={nouvelle.desc} onChange={e=>setNouvelle({...nouvelle,desc:e.target.value})} className="input-dnd col-span-2" rows={3} />
+          <button onClick={ajouter} className="dnd-btn rounded px-4 py-2 col-span-2">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function Notes({ state, update }) {
+  return (
+    <div className="parchment rounded-xl p-4">
+      <h3 className="text-lg font-bold ink mb-2">Notes de campagne</h3>
+      <textarea value={state.notes||''} onChange={e=>update({notes:e.target.value})} className="input-dnd w-full" rows={20} />
+    </div>
+  );
+}
+function Reglages({ state, update, setState }) {
+  const exp = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(state.nom||'perso').replace(/\s/g,'_')}.json`;
+    a.click();
+  };
+  const imp = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        setState({ ...defaultCharacter(), ...data });
+      } catch(err) { alert('Fichier invalide'); }
+    };
+    r.readAsText(f);
+  };
+  return (
+    <div className="parchment rounded-xl p-4">
+      <h3 className="text-lg font-bold ink mb-2">Réglages</h3>
+      <div className="flex flex-wrap gap-2">
+        <button className="dnd-btn rounded-lg px-4 py-2" onClick={exp}>Exporter JSON</button>
+        <label className="dnd-btn rounded-lg px-4 py-2 cursor-pointer">
+          Importer JSON
+          <input type="file" accept=".json" onChange={imp} className="hidden" />
+        </label>
+        <button className="dnd-btn dnd-btn-danger rounded-lg px-4 py-2" onClick={()=>{
+          if (confirm('Réinitialiser le personnage (perte définitive) ?')) setState(defaultCharacter());
+        }}>Réinitialiser</button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<!-- === PWA : enregistrement du service worker + bannière "mise à jour disponible" === -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Vérifie une mise à jour à chaque chargement
+      reg.update();
+
+      // Détecte un nouveau worker en attente
+      function notifyUpdate() {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#b62828 0%,#5e0e0e 100%);color:#f0d480;padding:10px 18px;border:1px solid #8a6420;border-radius:8px;font-family:"Cinzel",serif;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;z-index:9999;box-shadow:0 6px 16px rgba(0,0,0,0.6),inset 0 1px 0 rgba(240,212,128,0.3);';
+        banner.textContent = '✦ Mise à jour disponible — Cliquer pour recharger ✦';
+        banner.onclick = () => {
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          location.reload();
+        };
+        document.body.appendChild(banner);
+      }
+
+      if (reg.waiting) notifyUpdate();
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw && nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) notifyUpdate();
+        });
+      });
+    }).catch((err) => console.warn('SW registration failed:', err));
+
+    // Recharge automatique quand un nouveau SW prend le contrôle
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  });
+}
+</script>
+</body>
+</html>
