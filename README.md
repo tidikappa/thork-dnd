@@ -1,4 +1,4 @@
-# Assistant D&D 5e — Thork
+# Assistant D&D 5e — Thork 
 
 Application web personnelle pour gérer le personnage **Thork** (Demi-orc Clerc Tempête, niv 4) en sessions de Donjons & Dragons 5e (édition 2024).
 
