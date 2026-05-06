@@ -8,7 +8,7 @@
 // puis ré-uploade le sw.js. Les utilisateurs recevront la nouvelle version
 // au prochain chargement (ou au plus tard 24h après).
 
-const CACHE_VERSION = 'thork-pwa-v1';
+const CACHE_VERSION = 'thork-pwa-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 

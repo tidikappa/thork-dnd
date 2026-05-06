@@ -1019,8 +1019,8 @@ function defaultCharacter() {
     ideaux: '« La vraie foi, c\'est la capacité d\'imposer sa volonté dans le chaos. Comme la tempête, je ne me plie à personne. »',
     liens: 'J\'ai juré de retrouver le traître qui a volé mon équipage. Mon marteau portera le jugement.',
     defauts: '- Pedophobique (je déteste les enfants)\n- J\'ai une idée très précise de ce que je souhaite pour ma mort et j\'ai toujours mon testament sur moi.',
-    caracs: { for:16, dex:8, con:14, int:10, sag:17, cha:12 },
-    bonus_caracs: { for:1, dex:0, con:0, int:0, sag:0, cha:0 }, // bonus appliqué à tous les jets de cette carac (pour matcher AideDD : +1 FOR)
+    caracs: { for:18, dex:8, con:14, int:10, sag:17, cha:12 }, // FOR 18 après ASI +2 au niveau 4
+    bonus_caracs: { for:0, dex:0, con:0, int:0, sag:0, cha:0 }, // overrides custom (objets magiques, etc.)
     competences_maitrisees: ['athletisme','intimidation','perspicacite','medecine','perception'],
     competences_expertise: [],
     sauvegardes_extra: [],
@@ -1081,8 +1081,8 @@ function defaultCharacter() {
       { id:'i20', nom:'Cache-œil', qte:1, poids:0 },
     ],
     armes: [
-      { id:'a1', nom:'Marteau de guerre', bonus:'+5', degats:'1d8+3', type:'contondant', portee:'CàC', props:'Polyvalente (1d10)', equipe:true, carac:'for' },
-      { id:'a2', nom:'Marteau léger', bonus:'+5', degats:'1d4+3', type:'contondant', portee:'CàC / 6m-18m', props:'Légère, Lancer', equipe:true, carac:'for' },
+      { id:'a1', nom:'Marteau de guerre', bonus:'+6', degats:'1d8+4', type:'contondant', portee:'CàC', props:'Polyvalente (1d10)', equipe:true, carac:'for' },
+      { id:'a2', nom:'Marteau léger', bonus:'+6', degats:'1d4+4', type:'contondant', portee:'CàC / 6m-18m', props:'Légère, Lancer', equipe:true, carac:'for' },
       { id:'a3', nom:'Arbalète lourde', bonus:'+6', degats:'1d10', type:'perforant', portee:'30m / 120m', props:'Lourde, Chargement, 2 mains (override depuis AideDD)', equipe:true, carac:'dex' },
     ],
     or: 14, argent: 60, cuivre: 0, electrum: 0, platine: 0,
