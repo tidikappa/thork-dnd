@@ -1019,8 +1019,8 @@ function defaultCharacter() {
     ideaux: '« La vraie foi, c\'est la capacité d\'imposer sa volonté dans le chaos. Comme la tempête, je ne me plie à personne. »',
     liens: 'J\'ai juré de retrouver le traître qui a volé mon équipage. Mon marteau portera le jugement.',
     defauts: '- Pedophobique (je déteste les enfants)\n- J\'ai une idée très précise de ce que je souhaite pour ma mort et j\'ai toujours mon testament sur moi.',
-    caracs: { for:16, dex:8, con:14, int:10, sag:17, cha:12 },
-    bonus_caracs: { for:1, dex:0, con:0, int:0, sag:0, cha:0 }, // bonus appliqué à tous les jets de cette carac (pour matcher AideDD : +1 FOR)
+    caracs: { for:18, dex:8, con:14, int:10, sag:17, cha:12 }, // FOR 18 après ASI +2 au niveau 4
+    bonus_caracs: { for:0, dex:0, con:0, int:0, sag:0, cha:0 }, // overrides custom (objets magiques, etc.)
     competences_maitrisees: ['athletisme','intimidation','perspicacite','medecine','perception'],
     competences_expertise: [],
     sauvegardes_extra: [],
@@ -1055,6 +1055,8 @@ function defaultCharacter() {
       { id:'eclair_tracant', prepare:true },
       { id:'protection_mal_bien', prepare:true },
       { id:'immobilisation_personne', prepare:true },
+      { id:'eclair_appel', prepare:true },
+      { id:'tempete_neige', prepare:true },
     ],
     sorts_caracteristique_override: null,
     etats: [],
@@ -1081,8 +1083,8 @@ function defaultCharacter() {
       { id:'i20', nom:'Cache-œil', qte:1, poids:0 },
     ],
     armes: [
-      { id:'a1', nom:'Marteau de guerre', bonus:'+5', degats:'1d8+3', type:'contondant', portee:'CàC', props:'Polyvalente (1d10)', equipe:true, carac:'for' },
-      { id:'a2', nom:'Marteau léger', bonus:'+5', degats:'1d4+3', type:'contondant', portee:'CàC / 6m-18m', props:'Légère, Lancer', equipe:true, carac:'for' },
+      { id:'a1', nom:'Marteau de guerre', bonus:'+6', degats:'1d8+4', type:'contondant', portee:'CàC', props:'Polyvalente (1d10)', equipe:true, carac:'for' },
+      { id:'a2', nom:'Marteau léger', bonus:'+6', degats:'1d4+4', type:'contondant', portee:'CàC / 6m-18m', props:'Légère, Lancer', equipe:true, carac:'for' },
       { id:'a3', nom:'Arbalète lourde', bonus:'+6', degats:'1d10', type:'perforant', portee:'30m / 120m', props:'Lourde, Chargement, 2 mains (override depuis AideDD)', equipe:true, carac:'dex' },
     ],
     or: 14, argent: 60, cuivre: 0, electrum: 0, platine: 0,
@@ -1202,6 +1204,7 @@ window.__SORTS_DATA__ = [
   { id:'dissipation_magie', nom:'Dissipation de la magie', niveau:3, ecole:'Abjuration', classes:['B','C','D','M','P','O','E'], temps:'1 action', portee:'36 m', comp:'V, S', duree:'Instantanée', desc:'Tous les sorts de niveau ≤3 sur la cible se terminent. Sorts plus haut : test mod sort vs CD 10+niv sort.' },
   { id:'eclair_appel', nom:'Appel de la foudre', niveau:3, ecole:'Invocation', classes:['D','E'], temps:'1 action', portee:'Personnelle (36m)', comp:'V, S', duree:'Concentration 10 min', conc:true, desc:'Crée un nuage. Action : un éclair sur point ≤36m, sauv DEX, 3d10 foudre (moitié). Action bonus pour relancer. Outdoor en orage : 4d10.' },
   { id:'tempete_grele', nom:'Tempête de grêle', niveau:3, ecole:'Invocation', classes:['D','E','M'], temps:'1 action', portee:'45 m', comp:'V, S, M', duree:'Concentration 1 min', conc:true, desc:'Cylindre 12m H × 12m R. Lourdement obscurci. Terrain glace difficile. Sauv DEX entrer, échec à terre.' },
+  { id:'tempete_neige', nom:'Tempête de neige', niveau:3, ecole:'Invocation', classes:['D','E','M'], temps:'1 action', portee:'45 m', comp:'V, S, M (poussière + eau)', duree:'Concentration 1 min', conc:true, desc:'Cylindre 12m R × 6m H. Visibilité nulle, flammes éteintes. Sol glissant (terrain difficile). Sauv DEX à l\'entrée ou début de tour, échec : à terre. Concentration : sauv CON ou perd la concentration.' },
   { id:'animer_morts', nom:'Animation des morts', niveau:3, ecole:'Nécromancie', classes:['C','M'], temps:'1 minute', portee:'3 m', comp:'V, S, M', duree:'Instantanée', desc:'Un cadavre humanoïde devient zombie ou squelette sous votre contrôle (24h, renouvelable). +2 par niveau supérieur.' },
   { id:'voler', nom:'Vol', niveau:3, ecole:'Transmutation', classes:['E','M','O'], temps:'1 action', portee:'Contact', comp:'V, S, M (plume)', duree:'Concentration 10 min', conc:true, desc:'Cible vole 18m. +1 cible par niveau.' },
   { id:'masse_de_soins', nom:'Mot de guérison de groupe', niveau:3, ecole:'Abjuration', classes:['B','C','D'], temps:'1 action bonus', portee:'18 m', comp:'V', duree:'Instantanée', desc:'6 créatures récupèrent 1d4 + mod sort PV. +1d4 par niveau supérieur.' },
